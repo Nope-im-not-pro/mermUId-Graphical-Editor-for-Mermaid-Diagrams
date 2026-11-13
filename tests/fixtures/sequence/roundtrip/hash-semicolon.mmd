@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant A
+    participant B
+    A->>B: Ticket #42
+    B-->>A: SELECT 1;
+    A->>B: a; %% Kommentar
+    A->>B: x#59;y #35; z
+    Note over A: Notiz #1
+    Note right of B: SELECT 2; #c

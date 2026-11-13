@@ -1,0 +1,18 @@
+# Build-Kontext ist Repo-Root; nur Quellen für npm ci + npm run build.
+node_modules
+build
+.svelte-kit
+z_*
+server
+docker/*
+!docker/nginx.conf
+test-results
+playwright-report
+.git
+**/.env
+**/.env.*
+**/*Creds.txt
+**/Input_Variables.txt
+**/secrets.txt
+*.md
+restore.py

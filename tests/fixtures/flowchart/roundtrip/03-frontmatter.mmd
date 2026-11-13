@@ -1,0 +1,11 @@
+---
+title: Bestellung
+config:
+  flowchart:
+    curve: basis
+---
+flowchart LR
+  kunde[Kunde] --> shop(Shop)
+  shop --> lager[(Lager)]
+  %% Rückweg
+  lager -.->|liefert| kunde

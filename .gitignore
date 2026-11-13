@@ -1,0 +1,28 @@
+# Scripte, die nur fuer interne Nutzung oder zu Testzwecken erstellt wurden
+# Nur zwingend erforderliche Script-Dateien werden ausgenommen.
+*.sh
+*.ps1
+restore.py
+
+# Ablage fuer alte/archivierte Dateien (nur lokal, nicht auf GitHub)
+z_*
+shot.png
+
+# Interne Doku nicht auf GitHub pushen: Umsetzungsplaene, Konzepte, TODOs.
+# Nur zwingend oeffentliche Markdown-Dateien sind ausgenommen.
+*.md
+!CHANGELOG.md
+!README*.md
+!LICENSE.md
+!BLUEPRINT*.md
+!static/help/*.md
+
+# Abhaengigkeiten, Build- und Test-Ausgaben
+node_modules/
+build/
+.svelte-kit/
+test-results/
+playwright-report/
+release/
+.run/
+server/bin/

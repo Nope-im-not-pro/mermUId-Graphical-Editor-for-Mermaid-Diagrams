@@ -1,0 +1,11 @@
+flowchart TD
+	accTitle: Unbekannte Syntax
+	accDescr: bleibt RawBlock
+	A --> B; B --> C;
+	A@{ shape: rect }
+	C e2@--> A
+	e2@{ animate: true }
+	classDef x,y color:red
+	linkStyle default stroke:#999
+	%% kein Zeilenumbruch am Ende
+	C --> D

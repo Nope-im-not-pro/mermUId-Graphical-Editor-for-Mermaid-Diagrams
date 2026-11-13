@@ -1,0 +1,24 @@
+%% Erzeugen und Zerstören (T135 C3)
+sequenceDiagram
+    autonumber
+    box Aqua Team
+        participant A as Alice
+    end
+    A->>B: hallo
+    create participant C as Carl
+
+    A->>C: neu
+    loop wiederholen
+        create actor D
+        C->>D: start
+        destroy D
+        D-->>C: fertig
+    end
+    destroy C
+    A-xC: weg
+    create participant E
+    Note over A: kein Erzeugen am Stück
+    A->>E: spät
+    destroy B
+    %% Kommentar dazwischen
+    A->>B: bleibt roh

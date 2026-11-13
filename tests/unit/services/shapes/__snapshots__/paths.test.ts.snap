@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shapePath > circle: nicht leer, in der Box, deterministisch 1`] = `"M30 30 A30 30 0 1 0 90 30 A30 30 0 1 0 30 30 Z"`;
+
+exports[`shapePath > cylinder: nicht leer, in der Box, deterministisch 1`] = `"M0 12.24 A60 12.24 0 0 1 120 12.24 V47.76 A60 12.24 0 0 1 0 47.76 Z M0 12.24 A60 12.24 0 0 0 120 12.24"`;
+
+exports[`shapePath > diamond: nicht leer, in der Box, deterministisch 1`] = `"M60 0 L120 30 L60 60 L0 30 Z"`;
+
+exports[`shapePath > doublecircle: nicht leer, in der Box, deterministisch 1`] = `"M30 30 A30 30 0 1 0 90 30 A30 30 0 1 0 30 30 Z M35 30 A25 25 0 1 0 85 30 A25 25 0 1 0 35 30 Z"`;
+
+exports[`shapePath > hexagon: nicht leer, in der Box, deterministisch 1`] = `"M15 0 L105 0 L120 30 L105 60 L15 60 L0 30 Z"`;
+
+exports[`shapePath > inv_trapezoid: nicht leer, in der Box, deterministisch 1`] = `"M0 0 L120 0 L90 60 L30 60 Z"`;
+
+exports[`shapePath > lean_left: nicht leer, in der Box, deterministisch 1`] = `"M0 0 L90 0 L120 60 L30 60 Z"`;
+
+exports[`shapePath > lean_right: nicht leer, in der Box, deterministisch 1`] = `"M30 0 L120 0 L90 60 L0 60 Z"`;
+
+exports[`shapePath > odd: nicht leer, in der Box, deterministisch 1`] = `"M0 0 L120 0 L120 60 L0 60 L30 30 Z"`;
+
+exports[`shapePath > round: nicht leer, in der Box, deterministisch 1`] = `"M5 0 H115 A5 5 0 0 1 120 5 V55 A5 5 0 0 1 115 60 H5 A5 5 0 0 1 0 55 V5 A5 5 0 0 1 5 0 Z"`;
+
+exports[`shapePath > square: nicht leer, in der Box, deterministisch 1`] = `"M0 0 L120 0 L120 60 L0 60 Z"`;
+
+exports[`shapePath > stadium: nicht leer, in der Box, deterministisch 1`] = `"M30 0 H90 A30 30 0 0 1 120 30 V30 A30 30 0 0 1 90 60 H30 A30 30 0 0 1 0 30 V30 A30 30 0 0 1 30 0 Z"`;
+
+exports[`shapePath > subroutine: nicht leer, in der Box, deterministisch 1`] = `"M0 0 L120 0 L120 60 L0 60 Z M8 0 V60 M112 0 V60"`;
+
+exports[`shapePath > trapezoid: nicht leer, in der Box, deterministisch 1`] = `"M30 0 L90 0 L120 60 L0 60 Z"`;

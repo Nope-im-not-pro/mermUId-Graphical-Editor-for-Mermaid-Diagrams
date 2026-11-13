@@ -1,0 +1,10 @@
+%% Kommentar vor dem Kopf
+sequenceDiagram
+    %% Teilnehmer
+    participant K as Kunde
+    participant S as Shop
+    %% Ablauf
+    K->>S: Bestellung
+    S-->>K: Bestätigung %% nicht als Kommentar gemeint
+    %% Abschluss
+    Note over K,S: Fertig

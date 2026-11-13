@@ -1,0 +1,12 @@
+flowchart TD
+    accTitle: Unbekannte Syntax bleibt erhalten
+    accDescr: Zeilen ohne grafische Abbildung
+    A --> B; B --> C;
+    A@{ shape: rounded, label: "Form per Metadaten" }
+    C e1@--> A
+    e1@{ animate: true }
+    classDef warn fill:#f96,stroke:#333
+    class B warn
+    style C fill:#bbf
+    linkStyle 0 stroke:#f00
+    click A "https://example.org" "Hilfe"

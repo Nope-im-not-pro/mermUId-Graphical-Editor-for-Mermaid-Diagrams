@@ -1,0 +1,17 @@
+sequenceDiagram
+    box Aqua Gruppe
+        participant A
+        participant B
+    end
+    A->>B: vor dem Abbruch
+    break wenn fehlerhaft
+        loop nochmal
+            B->>A: Fehler
+        end
+    end
+    create participant C
+    A->>C: neu
+    destroy C
+    C->>A: weg
+    participant D@{ "type": "database" }
+    A->>D: speichern; D->>A: ok

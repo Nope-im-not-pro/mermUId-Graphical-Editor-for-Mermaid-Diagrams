@@ -1,0 +1,17 @@
+%% Grundformen und Kantenarten
+graph TD
+    A[Start] --> B{Prüfen?}
+    B -->|ja| C(Weiter)
+    B -- nein --> D([Ende])
+
+    C -.-> E[(Datenbank)]
+    C ==> F((Kreis))
+    D --- G>Fahne]
+    E --o H{{Sechseck}}
+    F --x I[/Schräg/]
+    G <--> J[\Schräg links\]
+    H ~~~ K[/Trapez\]
+    I ---> L[\Umgekehrt/]
+    J -..-> M[[Unterprogramm]]
+    M -. gepunktet .-> N(((Doppelt)))
+    N == dick ==> O["Zitat; mit <b>HTML</b>"]

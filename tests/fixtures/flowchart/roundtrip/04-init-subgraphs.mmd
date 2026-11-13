@@ -1,0 +1,20 @@
+%%{init: {"theme": "forest", "flowchart": {"htmlLabels": false}}}%%
+flowchart TB
+  %% verschachtelte Subgraphen mit Richtung
+  subgraph aussen [Außen]
+    direction LR
+    a1 --> a2
+    subgraph innen
+      b1[Innen 1]
+      b2[Innen 2]
+    end
+    a2 --> b1
+  end
+  subgraph "Ohne ID"
+    c1
+  end
+  subgraph nur Text ohne Klammern
+    d1
+  end
+  innen --> c1
+  a1 --> d1

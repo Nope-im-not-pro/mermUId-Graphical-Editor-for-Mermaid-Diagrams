@@ -1,0 +1,270 @@
+/*
+ * Design-Tokens Entwurf A "Studio" (design/entwurf-a-studio.html).
+ * Tokens hängen an `.shell`, damit Dialoge und Hilfe innerhalb der Shell mitziehen.
+ * Bestehende Komponenten-Variablen (--node-fill, --panel-bg, --focus, ...) werden hier
+ * auf die Tokens abgebildet; Grundstile über :where() ohne Spezifität, damit
+ * Komponenten-Stile immer gewinnen.
+ */
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+}
+
+.shell {
+	--bg: #0d0f14;
+	--surface: #14171f;
+	--surface-2: #1b1f2a;
+	--surface-3: #232838;
+	--line: #5c6990;
+	--text: #e6e9f2;
+	--text-2: #a3abc2;
+	--text-3: #888fa6;
+	--accent: #7c8cff;
+	--accent-2: #a78bfa;
+	--accent-soft: #7c8cff22;
+	/* Grund des Primärknopfs (weiße Schrift, >= 4,5:1, T116). */
+	--accent-fill: #4e64ff;
+	--accent-fill-2: #7f56f8;
+	--ok: #3fd29b;
+	--warn: #f5b84a;
+	--err: #ff6b7d;
+	--node: #1d2232;
+	--node-line: #525e89;
+	--grid: #ffffff0d;
+	--paper: #ffffff;
+	--shadow: 0 10px 30px -10px #000c, 0 2px 6px #0006;
+	--radius: 12px;
+	--font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
+	--logo-accent: #7c8cff;
+
+	/* Abbildung bestehender Komponenten-Variablen */
+	--panel-bg: var(--surface);
+	--canvas-bg: var(--bg);
+	--node-fill: var(--node);
+	--node-stroke: var(--node-line);
+	--edge: var(--text-3);
+	--edge-label: var(--text-2);
+	--focus: var(--accent);
+	--border: var(--line);
+	--surface-alt: var(--surface-2);
+	--error: var(--err);
+	--container-fill: #7c8cff0d;
+	--note-fill: #3a3320;
+	--syn-keyword: #b49cff;
+	--syn-string: #3fd29b;
+	/* Codekommentar ist Text: gleicher Kontrast wie --text-3 (T116). */
+	--syn-comment: var(--text-3);
+	--syn-operator: #7c8cff;
+	--syn-punct: #a3abc2;
+
+	/* Svelte Flow */
+	--xy-background-color: var(--bg);
+	--xy-background-pattern-dots-color: var(--grid);
+	--xy-background-pattern-lines-color: var(--grid);
+	--xy-node-color: var(--text);
+	--xy-edge-stroke: var(--text-3);
+	--xy-edge-label-background-color: var(--bg);
+	--xy-edge-label-color: var(--text-2);
+	--xy-connectionline-stroke: var(--accent);
+	--xy-handle-background-color: var(--surface);
+	--xy-handle-border-color: var(--accent);
+	--xy-selection-background-color: var(--accent-soft);
+	--xy-selection-border: 1px dotted var(--accent);
+	--xy-controls-button-background-color: var(--surface);
+	--xy-controls-button-background-color-hover: var(--surface-3);
+	--xy-controls-button-color: var(--text-2);
+	--xy-controls-button-color-hover: var(--text);
+	--xy-controls-button-border-color: var(--line);
+	--xy-controls-box-shadow: var(--shadow);
+	--xy-attribution-background-color: transparent;
+
+	color-scheme: dark;
+	background: var(--bg);
+	color: var(--text);
+	font: 14px/1.45 var(--font);
+	-webkit-font-smoothing: antialiased;
+}
+
+.shell[data-theme='light'] {
+	--bg: #f3f4f8;
+	--surface: #ffffff;
+	--surface-2: #f6f7fb;
+	--surface-3: #eceef5;
+	--line: #828eb5;
+	--text: #151824;
+	--text-2: #4a5270;
+	--text-3: #636b86;
+	--accent: #4f5bff;
+	--accent-2: #7c3aed;
+	--accent-soft: #4f5bff18;
+	--accent-fill: var(--accent);
+	--accent-fill-2: var(--accent-2);
+	--ok: #0d7b53;
+	--warn: #975f00;
+	--err: #d0213f;
+	--node: #ffffff;
+	--node-line: #838bae;
+	--grid: #1518240f;
+	--shadow: 0 10px 30px -12px #1518243a, 0 2px 6px #15182414;
+	--container-fill: #4f5bff0a;
+	--note-fill: #fff5ad;
+	--syn-keyword: #6d28d9;
+	--syn-string: #0a7d55;
+	--syn-operator: #4f5bff;
+	--syn-punct: #4a5270;
+	color-scheme: light;
+}
+
+/* ---------- Grundstile für Bedienelemente ---------- */
+
+:where(.shell),
+:where(.shell) *,
+:where(.shell) ::before,
+:where(.shell) ::after {
+	box-sizing: border-box;
+}
+
+:where(.shell) :where(button) {
+	font: inherit;
+	color: var(--text-2);
+	background: var(--surface-2);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 0.3rem 0.7rem;
+	cursor: pointer;
+}
+
+:where(.shell) :where(button:hover:not(:disabled)) {
+	color: var(--text);
+	border-color: var(--text-3);
+}
+
+:where(.shell) :where(button:disabled) {
+	opacity: 0.4;
+	cursor: default;
+}
+
+:where(.shell)
+	:where(input:not([type='checkbox'], [type='radio'], [type='range']), select, textarea) {
+	font: inherit;
+	color: var(--text);
+	background: var(--surface-2);
+	border: 1px solid var(--line);
+	border-radius: 8px;
+	padding: 0.35rem 0.6rem;
+}
+
+:where(.shell) :where(input, select, textarea):focus {
+	outline: none;
+	border-color: var(--accent);
+	box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+:where(.shell) :where(input[type='checkbox'], input[type='radio']) {
+	accent-color: var(--accent);
+}
+
+:where(.shell) :where(a) {
+	color: var(--accent);
+}
+
+:where(.shell) :where(:focus-visible) {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
+}
+
+:where(.shell) :where(code, pre, kbd) {
+	font-family: var(--mono);
+}
+
+/* ---------- Seitenleiste ---------- */
+
+.shell .side :where(h2, h3) {
+	margin: 0 0 10px;
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.shell #shell-properties :where(input, select, textarea) {
+	width: 100%;
+	min-width: 0;
+}
+
+/* ---------- CodeMirror ---------- */
+
+.shell .cm-editor {
+	background: var(--surface-2);
+	color: var(--text);
+	font-size: 12.5px;
+}
+
+.shell .cm-editor .cm-content,
+.shell .cm-editor .cm-gutters {
+	font-family: var(--mono);
+	/* Pfeile wie --> nicht als Ligatur darstellen: Code muss zeichengenau lesbar sein. */
+	font-variant-ligatures: none;
+}
+
+.shell .cm-editor .cm-content {
+	caret-color: var(--text);
+}
+
+.shell .cm-editor .cm-cursor {
+	border-left-color: var(--text);
+}
+
+.shell .cm-editor .cm-gutters {
+	background: var(--surface-2);
+	color: var(--text-3);
+	border-right: 1px solid var(--line);
+}
+
+.shell .cm-editor .cm-activeLine {
+	background: var(--accent-soft);
+}
+
+.shell .cm-editor .cm-activeLineGutter {
+	background: var(--surface-3);
+	color: var(--text-2);
+}
+
+.shell .cm-editor.cm-focused .cm-selectionBackground,
+.shell .cm-editor .cm-selectionBackground,
+.shell .cm-editor ::selection {
+	background: #7c8cff55;
+}
+
+.shell .cm-tooltip,
+.shell .cm-panels {
+	background: var(--surface);
+	color: var(--text);
+	border-color: var(--line);
+}
+
+/* ---------- Svelte Flow ---------- */
+
+.shell .svelte-flow__controls {
+	border-radius: 10px;
+	overflow: hidden;
+	border: 1px solid var(--line);
+}
+
+.shell .svelte-flow__controls-button {
+	border-radius: 0;
+}
+
+.shell .svelte-flow__controls-button svg {
+	fill: currentColor;
+}
+
+.shell .svelte-flow__panel button {
+	font-size: 12px;
+	padding: 0.2rem 0.55rem;
+}
+
+.shell .svelte-flow__attribution {
+	color: var(--text-3);
+}

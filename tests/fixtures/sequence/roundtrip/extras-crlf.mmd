@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    participant A as Alice
+    A->>B: eins
+    break wenn voll
+        B-->>A: Abbruch
+        loop nochmal
+            Note over A,B: warten
+        end
+    end
+
+    autonumber 10 5
+    A->>B: zehn
+    break
+        B->>A: ohne Label
+    end
+    autonumber off
+    B->>A: ohne Nummer

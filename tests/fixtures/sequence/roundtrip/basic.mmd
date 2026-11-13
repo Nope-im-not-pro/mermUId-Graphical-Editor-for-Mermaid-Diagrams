@@ -1,0 +1,22 @@
+sequenceDiagram
+    participant A as Alice
+    actor B as Bob
+    participant C
+    A->>B: Hallo Bob
+    B-->>A: Hallo Alice
+    A-)C: asynchron
+    C--)A: Antwort
+    A-xB: abgebrochen
+    B--xA: auch abgebrochen
+    A->C: offen
+    C-->A: offen gepunktet
+    A<<->>B: beidseitig
+    A-|\C: halb
+    Note left of A: links
+    note right of B: rechts
+    Note over A,C: über beide
+    activate C
+    A->>+C: start
+    C-->>-A: stop
+    deactivate C
+    D->>A: implizit

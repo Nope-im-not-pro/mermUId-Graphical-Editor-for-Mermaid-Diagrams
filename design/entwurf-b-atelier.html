@@ -1,0 +1,1306 @@
+<!doctype html>
+<!--
+	mermUId Frontend-Entwurf B "Atelier"
+	Hell-zuerst, ruhig, Canvas maximal. Kopfzeile mit Ansichtsmodus Grafik / Geteilt / Code,
+	schwebendes Werkzeug-Dock unten, Inspektor als schwebende Karte, Befehlspalette (Strg+K)
+	statt vieler Toolbar-Knöpfe, Vorschau als ausklappbare Schublade. Beispiel: sequenceDiagram.
+	Statisches Mockup: keine externen Ressourcen (offline, CSP-tauglich bis auf Inline-Skript).
+-->
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>mermUId Atelier</title>
+		<style>
+			:root {
+				--bg: #f5f2ec;
+				--paper: #fffdf9;
+				--card: #ffffff;
+				--line: #e7e1d6;
+				--line-2: #d8d0c1;
+				--text: #1f1c17;
+				--text-2: #5b5448;
+				--text-3: #948b7c;
+				--accent: #e2572b;
+				--accent-ink: #ffffff;
+				--accent-soft: #e2572b17;
+				--teal: #0f8b8d;
+				--teal-soft: #0f8b8d1a;
+				--ok: #2f8a4e;
+				--warn: #b7791f;
+				--life: #c9bfae;
+				--grid: #1f1c170d;
+				--shadow: 0 1px 2px #1f1c170f, 0 12px 32px -14px #1f1c1740;
+				--radius: 16px;
+				--font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+				--serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+				--mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+				color-scheme: light;
+			}
+			:root[data-theme='dark'] {
+				--bg: #161412;
+				--paper: #1d1a17;
+				--card: #24201c;
+				--line: #342f29;
+				--line-2: #453e36;
+				--text: #f2ede4;
+				--text-2: #c2b9aa;
+				--text-3: #8a8174;
+				--accent: #ff7a4d;
+				--accent-ink: #1d1a17;
+				--accent-soft: #ff7a4d22;
+				--teal: #4cc5c7;
+				--teal-soft: #4cc5c722;
+				--ok: #6bd08e;
+				--warn: #e9b45a;
+				--life: #4a433a;
+				--grid: #ffffff0a;
+				--shadow: 0 1px 2px #0006, 0 14px 34px -14px #000c;
+				color-scheme: dark;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font: 14px/1.5 var(--font);
+				-webkit-font-smoothing: antialiased;
+				overflow: hidden;
+			}
+			button,
+			input,
+			select,
+			textarea {
+				font: inherit;
+				color: inherit;
+			}
+			:focus-visible {
+				outline: 2px solid var(--accent);
+				outline-offset: 2px;
+			}
+			.visually-hidden {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				overflow: hidden;
+				clip-path: inset(50%);
+			}
+			svg.i {
+				width: 18px;
+				height: 18px;
+				stroke: currentColor;
+				fill: none;
+				stroke-width: 1.7;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+				flex: none;
+			}
+
+			/* ---------- Kopfzeile ---------- */
+			.head {
+				height: 60px;
+				display: grid;
+				grid-template-columns: 1fr auto 1fr;
+				align-items: center;
+				padding: 0 18px;
+			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				min-width: 0;
+			}
+			.mark {
+				font: italic 600 22px var(--serif);
+				letter-spacing: -0.01em;
+			}
+			.mark em {
+				font-style: normal;
+				color: var(--accent);
+			}
+			.crumb {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				color: var(--text-2);
+				min-width: 0;
+			}
+			.crumb .sep {
+				color: var(--line-2);
+			}
+			.crumb input {
+				border: 1px solid transparent;
+				background: transparent;
+				border-radius: 8px;
+				padding: 4px 8px;
+				font-weight: 600;
+				color: var(--text);
+				width: 210px;
+			}
+			.crumb input:hover {
+				border-color: var(--line);
+			}
+			.dirty-dot {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: var(--accent);
+			}
+			.modes {
+				display: inline-flex;
+				background: var(--paper);
+				border: 1px solid var(--line);
+				border-radius: 999px;
+				padding: 3px;
+				box-shadow: var(--shadow);
+			}
+			.modes button {
+				border: 0;
+				background: transparent;
+				padding: 6px 16px;
+				border-radius: 999px;
+				cursor: pointer;
+				color: var(--text-2);
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				font-weight: 500;
+			}
+			.modes button[aria-pressed='true'] {
+				background: var(--text);
+				color: var(--paper);
+			}
+			.actions {
+				display: flex;
+				justify-content: flex-end;
+				align-items: center;
+				gap: 8px;
+			}
+			.btn {
+				height: 36px;
+				padding: 0 14px;
+				border-radius: 10px;
+				border: 1px solid var(--line);
+				background: var(--paper);
+				cursor: pointer;
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				color: var(--text-2);
+			}
+			.btn:hover {
+				border-color: var(--line-2);
+				color: var(--text);
+			}
+			.btn.accent {
+				background: var(--accent);
+				border-color: var(--accent);
+				color: var(--accent-ink);
+				font-weight: 600;
+			}
+			.btn.icon {
+				width: 36px;
+				padding: 0;
+				justify-content: center;
+			}
+			kbd {
+				font: 11px var(--mono);
+				color: var(--text-3);
+				background: var(--bg);
+				border: 1px solid var(--line);
+				border-radius: 5px;
+				padding: 1px 6px;
+			}
+
+			/* ---------- Arbeitsfläche ---------- */
+			.work {
+				position: relative;
+				height: calc(100vh - 60px - 28px);
+				margin: 0 12px;
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 12px;
+			}
+			.work[data-mode='split'] {
+				grid-template-columns: 1fr 420px;
+			}
+			.work[data-mode='code'] {
+				grid-template-columns: 0 1fr;
+			}
+			.work[data-mode='graphic'] .codepane {
+				display: none;
+			}
+			.work[data-mode='code'] .stage {
+				display: none;
+			}
+
+			.stage {
+				position: relative;
+				background-color: var(--paper);
+				background-image:
+					linear-gradient(var(--grid) 1px, transparent 1px),
+					linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+				background-size: 24px 24px;
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				overflow: hidden;
+			}
+			.diagram {
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+			}
+
+			/* Sequenz-Elemente */
+			.actor .box {
+				fill: var(--card);
+				stroke: var(--line-2);
+				stroke-width: 1.5;
+			}
+			.actor .who {
+				font: 600 14px var(--font);
+				fill: var(--text);
+				text-anchor: middle;
+				dominant-baseline: central;
+			}
+			.actor .role {
+				font: 11px var(--font);
+				fill: var(--text-3);
+				text-anchor: middle;
+			}
+			.actor .avatar {
+				fill: var(--teal-soft);
+				stroke: var(--teal);
+				stroke-width: 1.5;
+			}
+			.actor.selected .box {
+				stroke: var(--accent);
+				stroke-width: 2;
+			}
+			.actor {
+				cursor: move;
+			}
+			.life {
+				stroke: var(--life);
+				stroke-width: 1.5;
+				stroke-dasharray: 4 6;
+			}
+			.act {
+				fill: var(--teal-soft);
+				stroke: var(--teal);
+				stroke-width: 1.2;
+			}
+			.msg {
+				stroke: var(--text-2);
+				stroke-width: 1.6;
+				fill: none;
+				cursor: pointer;
+			}
+			.msg.reply {
+				stroke-dasharray: 5 5;
+			}
+			.msg-g:hover .msg,
+			.msg-g.selected .msg {
+				stroke: var(--accent);
+				stroke-width: 2.2;
+			}
+			.msg-g .hit {
+				stroke: transparent;
+				stroke-width: 16;
+				fill: none;
+				cursor: pointer;
+			}
+			.msg-text {
+				font: 13px var(--font);
+				fill: var(--text);
+				text-anchor: middle;
+			}
+			.msg-g.selected .msg-text {
+				fill: var(--accent);
+				font-weight: 600;
+			}
+			.num {
+				fill: var(--text);
+			}
+			.num-t {
+				font: 700 10px var(--font);
+				fill: var(--paper);
+				text-anchor: middle;
+				dominant-baseline: central;
+			}
+			.note rect {
+				fill: #fdf3c7;
+				stroke: #e5cf7a;
+			}
+			:root[data-theme='dark'] .note rect {
+				fill: #3a3320;
+				stroke: #6b5a26;
+			}
+			.note text {
+				font: 12.5px var(--font);
+				fill: var(--text);
+				text-anchor: middle;
+				dominant-baseline: central;
+			}
+			.frame rect {
+				fill: none;
+				stroke: var(--line-2);
+				stroke-width: 1.2;
+			}
+			.frame .tag {
+				fill: var(--bg);
+				stroke: var(--line-2);
+			}
+			.frame text {
+				font: 600 11.5px var(--font);
+				fill: var(--text-2);
+			}
+			.ghost-drop {
+				fill: none;
+				stroke: var(--accent);
+				stroke-width: 1.5;
+				stroke-dasharray: 4 4;
+				opacity: 0.8;
+			}
+			.ghost-text {
+				font: 12px var(--font);
+				fill: var(--accent);
+				text-anchor: middle;
+			}
+
+			/* ---------- Dock ---------- */
+			.dock {
+				position: absolute;
+				left: 50%;
+				bottom: 18px;
+				transform: translateX(-50%);
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				padding: 6px;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 18px;
+				box-shadow: var(--shadow);
+				z-index: 4;
+			}
+			.dock .sep {
+				width: 1px;
+				height: 26px;
+				background: var(--line);
+				margin: 0 4px;
+			}
+			.tool {
+				position: relative;
+				width: 44px;
+				height: 44px;
+				border: 0;
+				background: transparent;
+				border-radius: 12px;
+				display: grid;
+				place-items: center;
+				cursor: pointer;
+				color: var(--text-2);
+			}
+			.tool:hover {
+				background: var(--bg);
+				color: var(--text);
+			}
+			.tool[aria-pressed='true'] {
+				background: var(--text);
+				color: var(--paper);
+			}
+			.tool .k {
+				position: absolute;
+				right: 4px;
+				bottom: 2px;
+				font: 9px var(--mono);
+				color: var(--text-3);
+			}
+			.tool[aria-pressed='true'] .k {
+				color: var(--paper);
+				opacity: 0.6;
+			}
+			.tool svg.i {
+				width: 20px;
+				height: 20px;
+			}
+			.tool::after {
+				content: attr(data-tip);
+				position: absolute;
+				bottom: calc(100% + 10px);
+				left: 50%;
+				transform: translateX(-50%) translateY(4px);
+				background: var(--text);
+				color: var(--paper);
+				font-size: 12px;
+				padding: 4px 8px;
+				border-radius: 6px;
+				white-space: nowrap;
+				opacity: 0;
+				pointer-events: none;
+				transition: 0.12s;
+			}
+			.tool:hover::after {
+				opacity: 1;
+				transform: translateX(-50%) translateY(0);
+			}
+
+			/* ---------- schwebende Ecken ---------- */
+			.corner {
+				position: absolute;
+				display: flex;
+				gap: 6px;
+				z-index: 4;
+			}
+			.corner.tl {
+				top: 14px;
+				left: 14px;
+			}
+			.corner.bl {
+				bottom: 18px;
+				left: 14px;
+			}
+			.pillbox {
+				display: inline-flex;
+				align-items: center;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 12px;
+				box-shadow: var(--shadow);
+				padding: 3px;
+				gap: 2px;
+			}
+			.pillbox button {
+				border: 0;
+				background: transparent;
+				height: 30px;
+				min-width: 30px;
+				padding: 0 8px;
+				border-radius: 9px;
+				cursor: pointer;
+				color: var(--text-2);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+			}
+			.pillbox button:hover {
+				background: var(--bg);
+				color: var(--text);
+			}
+			.pillbox button:disabled {
+				opacity: 0.35;
+				cursor: default;
+			}
+			.pillbox .val {
+				font: 12px var(--mono);
+				color: var(--text-2);
+				padding: 0 6px;
+			}
+			.type-tag {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 12px;
+				box-shadow: var(--shadow);
+				padding: 0 12px;
+				height: 36px;
+				font: 12.5px var(--mono);
+				color: var(--text-2);
+			}
+			.type-tag::before {
+				content: '';
+				width: 8px;
+				height: 8px;
+				border-radius: 2px;
+				background: var(--teal);
+			}
+
+			/* ---------- Inspektor-Karte ---------- */
+			.inspector {
+				position: absolute;
+				top: 14px;
+				right: 14px;
+				width: 300px;
+				max-height: calc(100% - 28px);
+				overflow: auto;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				z-index: 4;
+			}
+			.work[data-mode='split'] .inspector {
+				right: 14px;
+			}
+			.insp-head {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 14px 16px 10px;
+			}
+			.insp-head h2 {
+				margin: 0;
+				font: 600 17px var(--serif);
+			}
+			.insp-head small {
+				display: block;
+				color: var(--text-3);
+				font: 11.5px var(--mono);
+			}
+			.chip {
+				font-size: 11px;
+				font-weight: 600;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: var(--teal);
+				background: var(--teal-soft);
+				padding: 3px 8px;
+				border-radius: 999px;
+			}
+			.insp-body {
+				padding: 0 16px 16px;
+			}
+			.f {
+				margin-top: 12px;
+			}
+			.f label,
+			.f .lbl {
+				display: block;
+				font-size: 12px;
+				font-weight: 500;
+				color: var(--text-2);
+				margin-bottom: 6px;
+			}
+			.f input,
+			.f select {
+				width: 100%;
+				height: 36px;
+				border: 1px solid var(--line);
+				border-radius: 10px;
+				background: var(--paper);
+				padding: 0 10px;
+			}
+			.f input:focus,
+			.f select:focus {
+				outline: none;
+				border-color: var(--accent);
+				box-shadow: 0 0 0 3px var(--accent-soft);
+			}
+			.arrows {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 6px;
+			}
+			.arrows button {
+				height: 40px;
+				border: 1px solid var(--line);
+				background: var(--paper);
+				border-radius: 10px;
+				cursor: pointer;
+				display: grid;
+				place-items: center;
+				color: var(--text-2);
+			}
+			.arrows button[aria-pressed='true'] {
+				border-color: var(--accent);
+				color: var(--accent);
+				background: var(--accent-soft);
+			}
+			.arrows svg {
+				width: 36px;
+				height: 12px;
+				stroke: currentColor;
+				fill: none;
+				stroke-width: 1.6;
+			}
+			.flow {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				padding: 10px 12px;
+				border: 1px dashed var(--line-2);
+				border-radius: 10px;
+				color: var(--text-2);
+				font-size: 13px;
+			}
+			.flow b {
+				color: var(--text);
+			}
+			.toggle {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-top: 14px;
+				font-size: 13px;
+				color: var(--text-2);
+			}
+			.switch {
+				width: 36px;
+				height: 20px;
+				border-radius: 999px;
+				border: 0;
+				background: var(--line-2);
+				position: relative;
+				cursor: pointer;
+			}
+			.switch::after {
+				content: '';
+				position: absolute;
+				top: 2px;
+				left: 2px;
+				width: 16px;
+				height: 16px;
+				border-radius: 50%;
+				background: #fff;
+				transition: 0.15s;
+			}
+			.switch[aria-checked='true'] {
+				background: var(--teal);
+			}
+			.switch[aria-checked='true']::after {
+				left: 18px;
+			}
+			.insp-foot {
+				display: flex;
+				gap: 6px;
+				padding: 12px 16px;
+				border-top: 1px solid var(--line);
+			}
+			.insp-foot .btn {
+				flex: 1;
+				justify-content: center;
+				height: 32px;
+				font-size: 13px;
+			}
+			.insp-foot .btn.danger:hover {
+				color: #c0392b;
+				border-color: #c0392b55;
+			}
+
+			/* ---------- Code-Bereich ---------- */
+			.codepane {
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				display: flex;
+				flex-direction: column;
+				overflow: hidden;
+				min-width: 0;
+			}
+			.codepane header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 12px 14px;
+				border-bottom: 1px solid var(--line);
+			}
+			.codepane h3 {
+				margin: 0;
+				font: 600 15px var(--serif);
+			}
+			.sync {
+				font-size: 12px;
+				color: var(--ok);
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+			}
+			.sync::before {
+				content: '';
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--ok);
+				box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 20%, transparent);
+			}
+			pre.code {
+				flex: 1;
+				margin: 0;
+				padding: 12px 0;
+				overflow: auto;
+				font: 13px/1.75 var(--mono);
+				counter-reset: ln;
+			}
+			pre.code .l {
+				display: block;
+				white-space: pre;
+				padding-right: 14px;
+			}
+			pre.code .l::before {
+				counter-increment: ln;
+				content: counter(ln);
+				display: inline-block;
+				width: 40px;
+				padding-right: 14px;
+				text-align: right;
+				color: var(--text-3);
+			}
+			pre.code .l.hl {
+				background: var(--accent-soft);
+			}
+			.code .k {
+				color: var(--accent);
+				font-weight: 600;
+			}
+			.code .a {
+				color: var(--teal);
+			}
+			.code .s {
+				color: var(--text);
+			}
+			.code .c {
+				color: var(--text-3);
+				font-style: italic;
+			}
+			.code .op {
+				color: var(--text-3);
+			}
+			.issues {
+				border-top: 1px solid var(--line);
+				padding: 10px 14px;
+				font-size: 12.5px;
+				color: var(--text-2);
+			}
+			.issues summary {
+				cursor: pointer;
+				font-weight: 600;
+			}
+			.issues ul {
+				margin: 8px 0 0;
+				padding: 0;
+				list-style: none;
+			}
+			.issues li {
+				display: flex;
+				gap: 8px;
+				padding: 6px 0;
+			}
+			.issues .w {
+				color: var(--warn);
+				font-weight: 700;
+			}
+
+			/* ---------- Vorschau-Schublade ---------- */
+			.drawer {
+				position: absolute;
+				left: 14px;
+				bottom: 84px;
+				width: 260px;
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 14px;
+				box-shadow: var(--shadow);
+				z-index: 4;
+				overflow: hidden;
+			}
+			.drawer summary {
+				list-style: none;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 9px 12px;
+				font-size: 12.5px;
+				font-weight: 600;
+				color: var(--text-2);
+			}
+			.drawer summary::-webkit-details-marker {
+				display: none;
+			}
+			.drawer svg.prev {
+				display: block;
+				width: 100%;
+				height: 130px;
+				border-top: 1px solid var(--line);
+				background: var(--paper);
+			}
+
+			/* ---------- Statuszeile ---------- */
+			.foot {
+				height: 28px;
+				display: flex;
+				align-items: center;
+				gap: 18px;
+				padding: 0 22px;
+				font-size: 12px;
+				color: var(--text-3);
+			}
+			.foot .grow {
+				flex: 1;
+			}
+			.foot .ok {
+				color: var(--ok);
+			}
+
+			/* ---------- Befehlspalette ---------- */
+			.scrim {
+				position: fixed;
+				inset: 0;
+				background: #1f1c1733;
+				backdrop-filter: blur(3px);
+				display: none;
+				align-items: flex-start;
+				justify-content: center;
+				padding-top: 14vh;
+				z-index: 20;
+			}
+			.scrim.open {
+				display: flex;
+			}
+			.cmdk {
+				width: min(560px, 92vw);
+				background: var(--card);
+				border: 1px solid var(--line);
+				border-radius: 18px;
+				box-shadow: 0 30px 80px -20px #0007;
+				overflow: hidden;
+			}
+			.cmdk .q {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 14px 16px;
+				border-bottom: 1px solid var(--line);
+			}
+			.cmdk .q input {
+				flex: 1;
+				border: 0;
+				background: transparent;
+				outline: none;
+				font-size: 16px;
+			}
+			.cmdk ul {
+				list-style: none;
+				margin: 0;
+				padding: 6px;
+				max-height: 340px;
+				overflow: auto;
+			}
+			.cmdk .grp {
+				font-size: 11px;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				color: var(--text-3);
+				padding: 10px 10px 4px;
+				font-weight: 600;
+			}
+			.cmdk li button {
+				width: 100%;
+				border: 0;
+				background: transparent;
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 9px 10px;
+				border-radius: 10px;
+				cursor: pointer;
+				text-align: left;
+				color: var(--text);
+			}
+			.cmdk li button:hover,
+			.cmdk li button.active {
+				background: var(--bg);
+			}
+			.cmdk li button span {
+				flex: 1;
+			}
+
+			@media (max-width: 1000px) {
+				.work[data-mode='split'] {
+					grid-template-columns: 1fr;
+					grid-template-rows: 1fr 40%;
+				}
+				.inspector {
+					width: 260px;
+				}
+				.head {
+					grid-template-columns: auto 1fr auto;
+				}
+				.crumb {
+					display: none;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					transition: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+			<defs>
+				<symbol id="i-pointer" viewBox="0 0 24 24"><path d="M4 3l7 17 2.5-7.5L21 10z" /></symbol>
+				<symbol id="i-hand" viewBox="0 0 24 24"
+					><path d="M8 13V5.5a1.5 1.5 0 013 0V12M11 11V4.5a1.5 1.5 0 013 0V12M14 11.5V6a1.5 1.5 0 013 0v8a7 7 0 01-7 7h-1a6 6 0 01-5-3l-2.5-4.5a1.5 1.5 0 012.6-1.5L8 15" /></symbol
+				>
+				<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0116 0" /></symbol>
+				<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M3 12h17M14 6l6 6-6 6" /></symbol>
+				<symbol id="i-note" viewBox="0 0 24 24"
+					><path d="M5 3h14v12l-6 6H5z" /><path d="M13 21v-6h6" /></symbol
+				>
+				<symbol id="i-loop" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4" /><path d="M3 11V9a3 3 0 013-3h15M7 22l-4-4 4-4" /><path d="M21 13v2a3 3 0 01-3 3H3" /></symbol>
+				<symbol id="i-frame" viewBox="0 0 24 24"
+					><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h7l2-2V4" /></symbol
+				>
+				<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 010 10h-3" /></symbol>
+				<symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5" /><path d="M20 9H9a5 5 0 000 10h3" /></symbol>
+				<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" /></symbol>
+				<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+				<symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></symbol>
+				<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></symbol>
+				<symbol id="i-cmd" viewBox="0 0 24 24"
+					><path d="M9 6a3 3 0 10-3 3h12a3 3 0 10-3-3v12a3 3 0 103-3H6a3 3 0 103 3z" /></symbol
+				>
+				<symbol id="i-export" viewBox="0 0 24 24"
+					><path d="M12 15V3M7 8l5-5 5 5" /><path d="M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6" /></symbol
+				>
+				<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z" /></symbol>
+				<symbol id="i-help" viewBox="0 0 24 24"
+					><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 015 .5c0 2-2.5 2-2.5 4M12 17h.01" /></symbol
+				>
+				<symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z" /></symbol>
+				<symbol id="i-split" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M12 4v16" /></symbol>
+				<symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5" /></symbol>
+				<symbol id="i-file" viewBox="0 0 24 24"
+					><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" /><path d="M14 3v5h5" /></symbol
+				>
+				<symbol id="i-open" viewBox="0 0 24 24"
+					><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></symbol
+				>
+				<symbol id="i-save" viewBox="0 0 24 24"
+					><path d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /><path d="M7 3v5h8M7 21v-7h10v7" /></symbol
+				>
+				<symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 7h13l-4-4M17 17H4l4 4" /></symbol>
+				<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></symbol>
+				<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+					<path d="M0 0L10 5L0 10z" fill="context-stroke" />
+				</marker>
+				<marker id="open" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+					<path d="M0 0L10 5L0 10" fill="none" stroke="context-stroke" stroke-width="1.5" />
+				</marker>
+			</defs>
+		</svg>
+
+		<header class="head">
+			<div class="brand">
+				<span class="mark">merm<em>UI</em>d</span>
+				<span class="crumb">
+					<span class="sep">/</span>
+					<input value="login-ablauf.mmd" aria-label="Dateiname" data-testid="file" />
+					<span class="dirty-dot" title="Ungespeicherte Änderungen"></span>
+					<span class="visually-hidden">(geändert)</span>
+				</span>
+			</div>
+			<div class="modes" role="group" aria-label="Ansicht">
+				<button aria-pressed="false" data-mode="graphic"><svg class="i"><use href="#i-pen" /></svg>Grafik</button>
+				<button aria-pressed="true" data-mode="split"><svg class="i"><use href="#i-split" /></svg>Geteilt</button>
+				<button aria-pressed="false" data-mode="code"><svg class="i"><use href="#i-code" /></svg>Code</button>
+			</div>
+			<div class="actions">
+				<button class="btn" id="open-cmdk"><svg class="i"><use href="#i-cmd" /></svg>Befehle <kbd>Strg K</kbd></button>
+				<button class="btn icon" id="theme" title="Hell/Dunkel">
+					<svg class="i"><use href="#i-moon" /></svg><span class="visually-hidden">Farbschema wechseln</span>
+				</button>
+				<button class="btn icon" title="Hilfe (F1)">
+					<svg class="i"><use href="#i-help" /></svg><span class="visually-hidden">Hilfe</span>
+				</button>
+				<button class="btn accent"><svg class="i"><use href="#i-export" /></svg>Export</button>
+			</div>
+		</header>
+
+		<div class="work" id="work" data-mode="split">
+			<main class="stage" aria-label="Zeichenfläche">
+				<div class="corner tl">
+					<span class="type-tag" data-testid="type">sequenceDiagram</span>
+					<div class="pillbox" role="group" aria-label="Bearbeiten">
+						<button title="Rückgängig (Strg+Z)"><svg class="i"><use href="#i-undo" /></svg></button>
+						<button title="Wiederholen (Strg+Y)" disabled><svg class="i"><use href="#i-redo" /></svg></button>
+					</div>
+				</div>
+
+				<svg class="diagram" viewBox="0 0 1000 720" preserveAspectRatio="xMinYMin meet" id="diagram">
+					<!-- Lebenslinien -->
+					<line class="life" x1="130" y1="128" x2="130" y2="660" />
+					<line class="life" x1="340" y1="128" x2="340" y2="660" />
+					<line class="life" x1="550" y1="128" x2="550" y2="660" />
+
+					<!-- Aktivierungen -->
+					<rect class="act" x="334" y="190" width="12" height="320" rx="2" />
+					<rect class="act" x="544" y="240" width="12" height="90" rx="2" />
+
+					<!-- Akteure -->
+					<g class="actor" data-id="U">
+						<rect class="box" x="60" y="70" width="140" height="58" rx="12" />
+						<circle class="avatar" cx="84" cy="99" r="12" />
+						<text class="who" x="140" y="92">Nutzer</text>
+						<text class="role" x="140" y="113">actor · U</text>
+					</g>
+					<g class="actor selected" data-id="W">
+						<rect class="box" x="270" y="70" width="140" height="58" rx="12" />
+						<text class="who" x="340" y="92">Web-App</text>
+						<text class="role" x="340" y="113">participant · W</text>
+					</g>
+					<g class="actor" data-id="A">
+						<rect class="box" x="480" y="70" width="140" height="58" rx="12" />
+						<text class="who" x="550" y="92">Auth-Dienst</text>
+						<text class="role" x="550" y="113">participant · A</text>
+					</g>
+
+					<!-- Nachrichten -->
+					<g class="msg-g" data-n="1">
+						<path class="hit" d="M130 190 H332" />
+						<path class="msg" d="M130 190 H332" marker-end="url(#arr)" />
+						<text class="msg-text" x="231" y="180">Login absenden</text>
+						<circle class="num" cx="130" cy="190" r="9" /><text class="num-t" x="130" y="190">1</text>
+					</g>
+					<g class="msg-g selected" data-n="2">
+						<path class="hit" d="M346 240 H542" />
+						<path class="msg" d="M346 240 H542" marker-end="url(#arr)" />
+						<text class="msg-text" x="444" y="230">Token anfordern</text>
+						<circle class="num" cx="346" cy="240" r="9" /><text class="num-t" x="346" y="240">2</text>
+					</g>
+
+					<g class="frame">
+						<rect x="300" y="268" width="300" height="110" rx="6" />
+						<path class="tag" d="M300 268 h70 v14 l-8 8 h-62 z" />
+						<text x="308" y="283">alt gültig</text>
+						<line x1="300" y1="330" x2="600" y2="330" stroke="var(--line-2)" stroke-dasharray="4 4" />
+						<text x="308" y="346">else</text>
+					</g>
+
+					<g class="msg-g" data-n="3">
+						<path class="hit" d="M544 310 H348" />
+						<path class="msg reply" d="M544 310 H348" marker-end="url(#open)" />
+						<text class="msg-text" x="446" y="300">Token</text>
+						<circle class="num" cx="556" cy="310" r="9" /><text class="num-t" x="556" y="310">3</text>
+					</g>
+					<g class="msg-g" data-n="4">
+						<path class="hit" d="M544 364 H348" />
+						<path class="msg reply" d="M544 364 H348" marker-end="url(#open)" />
+						<text class="msg-text" x="446" y="356">401 abgelehnt</text>
+						<circle class="num" cx="556" cy="364" r="9" /><text class="num-t" x="556" y="364">4</text>
+					</g>
+
+					<g class="note">
+						<rect x="360" y="400" width="170" height="40" rx="6" />
+						<text x="445" y="420">Sitzung 30 min gültig</text>
+					</g>
+
+					<g class="msg-g" data-n="5">
+						<path class="hit" d="M334 480 H132" />
+						<path class="msg reply" d="M334 480 H132" marker-end="url(#open)" />
+						<text class="msg-text" x="233" y="470">Startseite</text>
+						<circle class="num" cx="340" cy="480" r="9" /><text class="num-t" x="340" y="480">5</text>
+					</g>
+
+					<!-- Einfügemarke beim Ziehen -->
+					<path class="ghost-drop" d="M130 560 H548" />
+					<text class="ghost-text" x="340" y="550">+ Nachricht hier einfügen</text>
+				</svg>
+
+				<div class="corner bl">
+					<div class="pillbox" role="group" aria-label="Ansicht">
+						<button title="Verkleinern"><svg class="i"><use href="#i-minus" /></svg></button>
+						<span class="val">100 %</span>
+						<button title="Vergrößern"><svg class="i"><use href="#i-plus" /></svg></button>
+						<button title="Einpassen"><svg class="i"><use href="#i-fit" /></svg></button>
+					</div>
+				</div>
+
+				<details class="drawer">
+					<summary>Vorschau (Mermaid) <span class="sync">aktuell</span></summary>
+					<svg class="prev" viewBox="0 0 900 700" aria-hidden="true">
+						<g stroke="var(--text-3)" stroke-width="5" fill="none">
+							<rect x="60" y="70" width="140" height="58" /><rect x="270" y="70" width="140" height="58" /><rect
+								x="480"
+								y="70"
+								width="140"
+								height="58"
+							/>
+							<path d="M130 128V660M340 128V660M550 128V660" stroke-dasharray="10 12" />
+							<path d="M130 190H340M340 240H550M550 310H340M550 364H340M340 480H130" stroke="var(--text-2)" />
+						</g>
+					</svg>
+				</details>
+
+				<!-- Werkzeug-Dock -->
+				<nav class="dock" aria-label="Werkzeuge">
+					<button class="tool" aria-pressed="true" data-tip="Auswahl"><svg class="i"><use href="#i-pointer" /></svg><span class="k">V</span></button>
+					<button class="tool" aria-pressed="false" data-tip="Verschieben"><svg class="i"><use href="#i-hand" /></svg><span class="k">H</span></button>
+					<span class="sep"></span>
+					<button class="tool" aria-pressed="false" data-tip="Teilnehmer"><svg class="i"><use href="#i-user" /></svg><span class="k">P</span></button>
+					<button class="tool" aria-pressed="false" data-tip="Nachricht"><svg class="i"><use href="#i-arrow" /></svg><span class="k">M</span></button>
+					<button class="tool" aria-pressed="false" data-tip="Notiz"><svg class="i"><use href="#i-note" /></svg><span class="k">N</span></button>
+					<button class="tool" aria-pressed="false" data-tip="Schleife / alt"><svg class="i"><use href="#i-loop" /></svg><span class="k">L</span></button>
+					<button class="tool" aria-pressed="false" data-tip="Block (rect, par)"><svg class="i"><use href="#i-frame" /></svg><span class="k">B</span></button>
+					<span class="sep"></span>
+					<button class="tool" aria-pressed="false" data-tip="Suchen (Strg+F)"><svg class="i"><use href="#i-search" /></svg></button>
+				</nav>
+
+				<!-- Inspektor -->
+				<aside class="inspector" aria-label="Eigenschaften">
+					<div class="insp-head">
+						<div>
+							<h2>Nachricht 2</h2>
+							<small>W → A · Zeile 6</small>
+						</div>
+						<span class="chip">Nachricht</span>
+					</div>
+					<div class="insp-body">
+						<div class="flow">
+							<b>Web-App</b>
+							<svg class="i"><use href="#i-arrow" /></svg>
+							<b>Auth-Dienst</b>
+							<button class="btn icon" style="margin-left: auto; width: 30px; height: 30px" title="Richtung tauschen">
+								<svg class="i"><use href="#i-swap" /></svg>
+							</button>
+						</div>
+						<div class="f">
+							<label for="m-text">Text</label>
+							<input id="m-text" value="Token anfordern" />
+						</div>
+						<div class="f">
+							<span class="lbl">Pfeil</span>
+							<div class="arrows" role="group" aria-label="Pfeiltyp">
+								<button aria-pressed="true" title="->> synchron"><svg viewBox="0 0 36 12"><path d="M2 6h30M26 1l6 5-6 5" fill="currentColor" /></svg></button>
+								<button aria-pressed="false" title="-->> Antwort"><svg viewBox="0 0 36 12"><path d="M2 6h30" stroke-dasharray="4 3" /><path d="M26 1l6 5-6 5" /></svg></button>
+								<button aria-pressed="false" title="-x Abbruch"><svg viewBox="0 0 36 12"><path d="M2 6h28M26 2l8 8M34 2l-8 8" /></svg></button>
+								<button aria-pressed="false" title="-) asynchron"><svg viewBox="0 0 36 12"><path d="M2 6h28M28 1q6 5 0 10" /></svg></button>
+							</div>
+						</div>
+						<div class="toggle">
+							<span>Aktivierung starten (+)</span>
+							<button class="switch" role="switch" aria-checked="true" aria-label="Aktivierung starten"></button>
+						</div>
+						<div class="toggle">
+							<span>Nummerierung (autonumber)</span>
+							<button class="switch" role="switch" aria-checked="true" aria-label="Nummerierung"></button>
+						</div>
+					</div>
+					<div class="insp-foot">
+						<button class="btn">Duplizieren</button>
+						<button class="btn danger"><svg class="i"><use href="#i-trash" /></svg>Löschen</button>
+					</div>
+				</aside>
+			</main>
+
+			<section class="codepane" aria-label="Code">
+				<header>
+					<h3>Mermaid-Code</h3>
+					<span class="sync">Grafik = Code</span>
+				</header>
+				<pre class="code"><span class="l"><span class="c">%% @mermuid {"v":1}</span></span><span class="l"><span class="k">sequenceDiagram</span></span><span class="l">  <span class="k">autonumber</span></span><span class="l">  <span class="k">actor</span> <span class="a">U</span> <span class="k">as</span> <span class="s">Nutzer</span></span><span class="l">  <span class="k">participant</span> <span class="a">W</span> <span class="k">as</span> <span class="s">Web-App</span></span><span class="l">  <span class="k">participant</span> <span class="a">A</span> <span class="k">as</span> <span class="s">Auth-Dienst</span></span><span class="l">  <span class="a">U</span><span class="op">-&gt;&gt;+</span><span class="a">W</span>: <span class="s">Login absenden</span></span><span class="l hl">  <span class="a">W</span><span class="op">-&gt;&gt;+</span><span class="a">A</span>: <span class="s">Token anfordern</span></span><span class="l">  <span class="k">alt</span> <span class="s">gültig</span></span><span class="l">    <span class="a">A</span><span class="op">--&gt;&gt;</span><span class="a">W</span>: <span class="s">Token</span></span><span class="l">  <span class="k">else</span></span><span class="l">    <span class="a">A</span><span class="op">--&gt;&gt;-</span><span class="a">W</span>: <span class="s">401 abgelehnt</span></span><span class="l">  <span class="k">end</span></span><span class="l">  <span class="k">Note over</span> <span class="a">W</span>,<span class="a">A</span>: <span class="s">Sitzung 30 min gültig</span></span><span class="l">  <span class="a">W</span><span class="op">--&gt;&gt;-</span><span class="a">U</span>: <span class="s">Startseite</span></span></pre>
+				<details class="issues">
+					<summary>Fehlerliste · 1 Hinweis</summary>
+					<ul>
+						<li><span class="w">!</span><span>Zeile 12: Deaktivierung von A nur im else-Zweig.</span></li>
+					</ul>
+				</details>
+			</section>
+		</div>
+
+		<footer class="foot" role="status">
+			<span class="ok">Parser: OK</span>
+			<span>Sync: Grafik=Code</span>
+			<span>Layout: Sequenz</span>
+			<span class="grow"></span>
+			<span>Auswahl: Nachricht 2</span>
+			<span>LF · UTF-8</span>
+		</footer>
+
+		<!-- Befehlspalette -->
+		<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-label="Befehle">
+			<div class="cmdk">
+				<label class="q">
+					<svg class="i"><use href="#i-search" /></svg>
+					<input id="cmdk-q" placeholder="Befehl oder Element suchen …" aria-label="Befehl suchen" />
+					<kbd>Esc</kbd>
+				</label>
+				<ul id="cmdk-list">
+					<li class="grp">Datei</li>
+					<li><button class="active"><svg class="i"><use href="#i-file" /></svg><span>Neu</span><kbd>Strg N</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-open" /></svg><span>Öffnen …</span><kbd>Strg O</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-save" /></svg><span>Speichern</span><kbd>Strg S</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-export" /></svg><span>Export (SVG, PNG, Markdown)</span><kbd>Strg ⇧ E</kbd></button></li>
+					<li class="grp">Bearbeiten</li>
+					<li><button><svg class="i"><use href="#i-undo" /></svg><span>Rückgängig</span><kbd>Strg Z</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-pointer" /></svg><span>Alles auswählen</span><kbd>Strg A</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-search" /></svg><span>Suchen</span><kbd>Strg F</kbd></button></li>
+					<li class="grp">Ansicht</li>
+					<li><button><svg class="i"><use href="#i-fit" /></svg><span>Einpassen</span><kbd>⇧ 1</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-code" /></svg><span>Code ein/aus</span><kbd>Strg E</kbd></button></li>
+					<li><button><svg class="i"><use href="#i-help" /></svg><span>Hilfe und Tastenkürzel</span><kbd>F1</kbd></button></li>
+				</ul>
+			</div>
+		</div>
+
+		<script>
+			// Nur Mockup-Interaktion: Ansichtsmodus, Theme, Dock, Auswahl, Befehlspalette.
+			const $ = (s, r = document) => r.querySelector(s);
+			const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+			const pick = (sel) => (b) =>
+				b.addEventListener('click', () => $$(sel).forEach((x) => x.setAttribute('aria-pressed', String(x === b))));
+
+			$$('.modes button').forEach((b) =>
+				b.addEventListener('click', () => {
+					$$('.modes button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+					$('#work').dataset.mode = b.dataset.mode;
+				})
+			);
+			$$('.tool').forEach(pick('.tool'));
+			$$('.arrows button').forEach(pick('.arrows button'));
+			$$('.switch').forEach((s) =>
+				s.addEventListener('click', () => s.setAttribute('aria-checked', String(s.getAttribute('aria-checked') !== 'true')))
+			);
+			$('#theme').addEventListener('click', () => {
+				const r = document.documentElement;
+				r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+			});
+
+			$$('.msg-g').forEach((g) =>
+				g.addEventListener('click', () => {
+					$$('.msg-g').forEach((x) => x.classList.toggle('selected', x === g));
+					$('.insp-head h2').textContent = 'Nachricht ' + g.dataset.n;
+					$('#m-text').value = $('.msg-text', g).textContent;
+				})
+			);
+			$$('.actor').forEach((a) =>
+				a.addEventListener('click', () => $$('.actor').forEach((x) => x.classList.toggle('selected', x === a)))
+			);
+
+			const scrim = $('#scrim');
+			const openCmdk = () => {
+				scrim.classList.add('open');
+				$('#cmdk-q').value = '';
+				filter('');
+				$('#cmdk-q').focus();
+			};
+			const closeCmdk = () => scrim.classList.remove('open');
+			function filter(q) {
+				q = q.toLowerCase();
+				$$('#cmdk-list li:not(.grp)').forEach((li) => (li.hidden = !li.textContent.toLowerCase().includes(q)));
+			}
+			$('#open-cmdk').addEventListener('click', openCmdk);
+			$('#cmdk-q').addEventListener('input', (e) => filter(e.target.value));
+			scrim.addEventListener('click', (e) => e.target === scrim && closeCmdk());
+			addEventListener('keydown', (e) => {
+				if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+					e.preventDefault();
+					openCmdk();
+				} else if (e.key === 'Escape') closeCmdk();
+			});
+		</script>
+	</body>
+</html>

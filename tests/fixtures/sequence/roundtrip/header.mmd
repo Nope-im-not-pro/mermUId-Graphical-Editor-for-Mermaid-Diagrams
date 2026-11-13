@@ -1,0 +1,23 @@
+---
+title: Bestellung
+config:
+  mirrorActors: false
+---
+%% Kommentar vor der Direktive
+%%{init: {"theme": "dark"}}%%
+
+  sequenceDiagram
+    %% @mermuid {"v":1}
+    title Bestellablauf
+    autonumber
+    accTitle: Barrierefreier Titel
+    accDescr {
+        Mehrzeilige
+        Beschreibung
+    }
+    participant A
+    # Hash-Kommentar
+    A ->> B : Text mit: Doppelpunkt
+    link A: Dashboard @ https://example.com/a
+
+

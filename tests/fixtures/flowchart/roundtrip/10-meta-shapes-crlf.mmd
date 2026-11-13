@@ -1,0 +1,8 @@
+flowchart LR
+  A@{ shape: document, label: "Dok" } --> B@{ shape: half-rounded-rectangle }
+  B --> C@{ shape: h-cyl, label: "DB" }
+  C --> D@{ shape: lin-cyl, label: "Disk" } --> E@{ shape: sl-rect, label: "Hand" }
+  X[Extra] --> A
+  X@{ shape: cyl }
+  E e9@--> A
+  e9@{ animate: true }

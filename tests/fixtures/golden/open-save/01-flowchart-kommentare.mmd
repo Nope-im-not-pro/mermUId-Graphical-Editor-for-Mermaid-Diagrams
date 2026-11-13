@@ -1,0 +1,10 @@
+%% Kopfkommentar vor dem Diagramm
+flowchart TD
+    %% Abschnitt: Eingang
+    A[Antrag] --> B{Prüfung}
+    %% Abschnitt: Entscheidung
+    B -->|ok| C[Freigabe]
+    B -->|nein| D[Ablehnung]
+    %%Kommentar ohne Leerzeichen
+    C --> E((Ende))
+%% Schlusskommentar

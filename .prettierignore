@@ -1,0 +1,2 @@
+# Fixtures sind byte-genaue Testeingaben (z. B. ~~~-Fences), nicht formatieren
+tests/fixtures/

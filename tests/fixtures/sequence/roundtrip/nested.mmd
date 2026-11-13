@@ -1,0 +1,30 @@
+sequenceDiagram
+  participant Kunde
+
+  loop Jede Minute
+      Kunde->>Shop: Ping
+      alt  erfolgreich
+          Shop-->>Kunde: Pong
+          opt Detail
+             Note over Shop: Log
+          end
+      else Fehler
+          Shop--xKunde: Timeout
+      else
+          rect rgb(200, 220, 255)
+              Shop->>Shop: Retry
+          end
+      end
+  end
+  par Kanal 1
+    Kunde->>Shop: A
+  and Kanal 2
+    Kunde->>Lager: B
+  and
+    Kunde->>Bank: C
+  end
+  critical Verbindung
+    Shop->>Bank: Zahlung
+  option Ausfall
+    Shop->>Shop: Abbruch
+  End

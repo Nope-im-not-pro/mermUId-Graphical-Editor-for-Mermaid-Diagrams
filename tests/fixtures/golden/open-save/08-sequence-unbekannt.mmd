@@ -1,0 +1,19 @@
+sequenceDiagram
+    title Unbekannte und seltene Syntax
+    box Aqua Gruppe
+        participant A
+        participant B
+    end
+    create participant C
+    A->>C: anlegen
+    rect rgb(200, 220, 255)
+        B->>A: hervorgehoben
+    end
+    critical Verbindung
+        A->>B: Zahlung
+    option Ausfall
+        A->>A: Abbruch
+    end
+    destroy C
+    C->>A: weg
+    link A: Dashboard @ https://example.com/a

@@ -1,0 +1,27 @@
+%% Teilnehmer-Gruppen (T135 C2)
+sequenceDiagram
+    box Aqua Frontend
+        actor U as Nutzer
+        %% Browser im Team
+        participant W as Web#59; App
+
+    end
+    box rgb(240, 240, 255) Backend
+        participant API
+        participant DB
+    end
+    box
+    end
+    BOX transparent wrap:Extern
+      participant X
+    end
+    U->>W: öffnen
+    W->>API: GET /data
+    API->>DB: query
+    Note over API,DB: Transaktion
+    box currentcolor Rest
+        participant R
+    end
+    DB-->>API: rows
+    API-->>W: 200
+    R->>X: sync

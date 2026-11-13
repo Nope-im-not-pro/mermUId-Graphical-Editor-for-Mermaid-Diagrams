@@ -1,0 +1,1278 @@
+<!doctype html>
+<!--
+	mermUId Frontend-Entwurf A "Studio"
+	Dunkel-zuerst, Werkzeug-Charakter (IDE-nah). Schwebende Befehlsleiste über dem Canvas,
+	Icon-Rail links, Formen-Palette als Kacheln, Inspektor rechts mit Tabs
+	Eigenschaften / Code / Fehler, Vorschau als schwebende Minikarte, Statuszeile als Pills.
+	Statisches Mockup: keine externen Ressourcen (offline, CSP-tauglich bis auf Inline-Skript).
+-->
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>mermUId Studio</title>
+		<style>
+			:root {
+				--bg: #0d0f14;
+				--surface: #14171f;
+				--surface-2: #1b1f2a;
+				--surface-3: #232838;
+				--line: #2a3042;
+				--line-soft: #20253433;
+				--text: #e6e9f2;
+				--text-2: #a3abc2;
+				--text-3: #6f7894;
+				--accent: #7c8cff;
+				--accent-2: #a78bfa;
+				--accent-soft: #7c8cff22;
+				--ok: #3fd29b;
+				--warn: #f5b84a;
+				--err: #ff6b7d;
+				--node: #1d2232;
+				--node-line: #3a4260;
+				--grid: #ffffff0d;
+				--shadow: 0 10px 30px -10px #000c, 0 2px 6px #0006;
+				--radius: 12px;
+				--font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+				--mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', Menlo, Consolas, monospace;
+				color-scheme: dark;
+			}
+			:root[data-theme='light'] {
+				--bg: #f3f4f8;
+				--surface: #ffffff;
+				--surface-2: #f6f7fb;
+				--surface-3: #eceef5;
+				--line: #dfe2ec;
+				--text: #151824;
+				--text-2: #4a5270;
+				--text-3: #7d86a3;
+				--accent: #4f5bff;
+				--accent-2: #7c3aed;
+				--accent-soft: #4f5bff18;
+				--ok: #11a36f;
+				--warn: #c27c00;
+				--err: #e0294a;
+				--node: #ffffff;
+				--node-line: #c6cbe0;
+				--grid: #1518240f;
+				--shadow: 0 10px 30px -12px #1518243a, 0 2px 6px #15182414;
+				color-scheme: light;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+			}
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font: 14px/1.45 var(--font);
+				-webkit-font-smoothing: antialiased;
+			}
+			button {
+				font: inherit;
+				color: inherit;
+			}
+			:focus-visible {
+				outline: 2px solid var(--accent);
+				outline-offset: 2px;
+			}
+			.visually-hidden {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				overflow: hidden;
+				clip-path: inset(50%);
+			}
+
+			/* ---------- Grundraster ---------- */
+			.app {
+				display: grid;
+				grid-template-columns: 56px 232px 1fr 340px;
+				grid-template-rows: 52px 1fr 30px;
+				grid-template-areas:
+					'rail top top top'
+					'rail palette canvas inspector'
+					'rail status status status';
+				height: 100vh;
+			}
+			.app.code-hidden {
+				grid-template-columns: 56px 232px 1fr 0;
+			}
+			.app.code-hidden .inspector {
+				display: none;
+			}
+
+			/* ---------- Icon-Rail ---------- */
+			.rail {
+				grid-area: rail;
+				background: var(--surface);
+				border-right: 1px solid var(--line);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				padding: 10px 0;
+				gap: 6px;
+			}
+			.logo {
+				width: 34px;
+				height: 34px;
+				border-radius: 10px;
+				background: linear-gradient(135deg, var(--accent), var(--accent-2));
+				display: grid;
+				place-items: center;
+				color: #fff;
+				font-weight: 700;
+				font-size: 15px;
+				margin-bottom: 10px;
+				box-shadow: 0 6px 18px -6px var(--accent);
+			}
+			.rail-btn {
+				width: 38px;
+				height: 38px;
+				border: 0;
+				background: transparent;
+				border-radius: 10px;
+				display: grid;
+				place-items: center;
+				color: var(--text-3);
+				cursor: pointer;
+				position: relative;
+			}
+			.rail-btn:hover {
+				background: var(--surface-3);
+				color: var(--text);
+			}
+			.rail-btn[aria-pressed='true'] {
+				background: var(--accent-soft);
+				color: var(--accent);
+			}
+			.rail-btn[aria-pressed='true']::before {
+				content: '';
+				position: absolute;
+				left: -9px;
+				top: 9px;
+				bottom: 9px;
+				width: 3px;
+				border-radius: 2px;
+				background: var(--accent);
+			}
+			.rail .spacer {
+				flex: 1;
+			}
+			svg.i {
+				width: 18px;
+				height: 18px;
+				stroke: currentColor;
+				fill: none;
+				stroke-width: 1.8;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+			}
+
+			/* ---------- Kopfzeile ---------- */
+			.top {
+				grid-area: top;
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				padding: 0 14px;
+				border-bottom: 1px solid var(--line);
+				background: var(--surface);
+			}
+			.file {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				min-width: 0;
+			}
+			.file-name {
+				font-weight: 600;
+				white-space: nowrap;
+			}
+			.dirty {
+				font-size: 12px;
+				color: var(--warn);
+				background: #f5b84a1a;
+				border: 1px solid #f5b84a40;
+				padding: 1px 8px;
+				border-radius: 999px;
+			}
+			.chip {
+				font: 12px var(--mono);
+				color: var(--text-2);
+				background: var(--surface-3);
+				padding: 3px 8px;
+				border-radius: 6px;
+			}
+			.top .grow {
+				flex: 1;
+			}
+			.ghost {
+				border: 1px solid var(--line);
+				background: var(--surface-2);
+				height: 32px;
+				padding: 0 12px;
+				border-radius: 8px;
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				cursor: pointer;
+				color: var(--text-2);
+			}
+			.ghost:hover {
+				color: var(--text);
+				border-color: var(--text-3);
+			}
+			.primary {
+				border: 0;
+				height: 32px;
+				padding: 0 14px;
+				border-radius: 8px;
+				background: linear-gradient(135deg, var(--accent), var(--accent-2));
+				color: #fff;
+				font-weight: 600;
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				cursor: pointer;
+				box-shadow: 0 6px 16px -8px var(--accent);
+			}
+			kbd {
+				font: 11px var(--mono);
+				color: var(--text-3);
+				border: 1px solid var(--line);
+				border-bottom-width: 2px;
+				border-radius: 4px;
+				padding: 0 5px;
+			}
+
+			/* ---------- Palette ---------- */
+			.palette {
+				grid-area: palette;
+				background: var(--surface);
+				border-right: 1px solid var(--line);
+				overflow: auto;
+				padding: 14px 12px;
+			}
+			.search {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				padding: 0 10px;
+				height: 34px;
+				color: var(--text-3);
+			}
+			.search input {
+				flex: 1;
+				border: 0;
+				background: transparent;
+				color: var(--text);
+				font: inherit;
+				outline: none;
+				min-width: 0;
+			}
+			.section-title {
+				font-size: 11px;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: var(--text-3);
+				margin: 18px 4px 8px;
+				font-weight: 600;
+			}
+			.tiles {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 6px;
+			}
+			.tile {
+				aspect-ratio: 1;
+				border: 1px solid var(--line);
+				background: var(--surface-2);
+				border-radius: 10px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 6px;
+				cursor: grab;
+				color: var(--text-2);
+				font-size: 10.5px;
+				padding: 4px;
+				transition:
+					transform 0.12s,
+					border-color 0.12s;
+			}
+			.tile:hover {
+				border-color: var(--accent);
+				color: var(--text);
+				transform: translateY(-1px);
+			}
+			.tile svg {
+				width: 34px;
+				height: 22px;
+				stroke: currentColor;
+				fill: none;
+				stroke-width: 1.6;
+			}
+			.template {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				width: 100%;
+				text-align: left;
+				border: 1px solid var(--line);
+				background: var(--surface-2);
+				border-radius: 10px;
+				padding: 10px;
+				margin-bottom: 6px;
+				cursor: grab;
+				color: var(--text-2);
+			}
+			.template:hover {
+				border-color: var(--accent);
+				color: var(--text);
+			}
+			.template .thumb {
+				width: 46px;
+				height: 30px;
+				border-radius: 6px;
+				background: var(--surface-3);
+				display: grid;
+				place-items: center;
+			}
+			.template b {
+				display: block;
+				color: var(--text);
+				font-weight: 600;
+				font-size: 13px;
+			}
+			.template small {
+				color: var(--text-3);
+			}
+
+			/* ---------- Canvas ---------- */
+			.canvas {
+				grid-area: canvas;
+				position: relative;
+				overflow: hidden;
+				background-color: var(--bg);
+				background-image: radial-gradient(var(--grid) 1.2px, transparent 1.2px);
+				background-size: 20px 20px;
+			}
+			.cmdbar {
+				position: absolute;
+				top: 14px;
+				left: 50%;
+				transform: translateX(-50%);
+				display: flex;
+				align-items: center;
+				gap: 2px;
+				padding: 4px;
+				background: color-mix(in srgb, var(--surface) 88%, transparent);
+				backdrop-filter: blur(12px);
+				border: 1px solid var(--line);
+				border-radius: 12px;
+				box-shadow: var(--shadow);
+				z-index: 3;
+			}
+			.cmdbar .sep {
+				width: 1px;
+				height: 20px;
+				background: var(--line);
+				margin: 0 4px;
+			}
+			.icon-btn {
+				width: 32px;
+				height: 32px;
+				border: 0;
+				background: transparent;
+				border-radius: 8px;
+				display: grid;
+				place-items: center;
+				color: var(--text-2);
+				cursor: pointer;
+			}
+			.icon-btn:hover {
+				background: var(--surface-3);
+				color: var(--text);
+			}
+			.icon-btn:disabled {
+				opacity: 0.35;
+				cursor: default;
+			}
+			.seg {
+				display: inline-flex;
+				background: var(--surface-3);
+				border-radius: 8px;
+				padding: 2px;
+			}
+			.seg button {
+				border: 0;
+				background: transparent;
+				padding: 0 10px;
+				height: 28px;
+				border-radius: 6px;
+				color: var(--text-2);
+				cursor: pointer;
+				font-size: 12.5px;
+			}
+			.seg button[aria-pressed='true'] {
+				background: var(--surface);
+				color: var(--text);
+				box-shadow: 0 1px 3px #0004;
+				font-weight: 600;
+			}
+			.zoom-val {
+				font: 12px var(--mono);
+				color: var(--text-2);
+				width: 44px;
+				text-align: center;
+			}
+
+			.diagram {
+				position: absolute;
+				inset: 0;
+				width: 100%;
+				height: 100%;
+			}
+			.node {
+				cursor: move;
+			}
+			.node .shape {
+				fill: var(--node);
+				stroke: var(--node-line);
+				stroke-width: 1.5;
+				transition: stroke 0.12s;
+			}
+			.node:hover .shape {
+				stroke: var(--text-3);
+			}
+			.node text {
+				fill: var(--text);
+				font: 500 13px var(--font);
+				text-anchor: middle;
+				dominant-baseline: central;
+				pointer-events: none;
+			}
+			.node.selected .shape {
+				stroke: var(--accent);
+				stroke-width: 2;
+				filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 45%, transparent));
+			}
+			.node .handle {
+				fill: var(--surface);
+				stroke: var(--accent);
+				stroke-width: 1.5;
+				display: none;
+			}
+			.node.selected .handle {
+				display: block;
+			}
+			.edge {
+				stroke: var(--text-3);
+				stroke-width: 1.6;
+				fill: none;
+			}
+			.edge.dotted {
+				stroke-dasharray: 3 4;
+			}
+			.edge-label {
+				font: 12px var(--font);
+				fill: var(--text-2);
+				text-anchor: middle;
+				dominant-baseline: central;
+			}
+			.edge-label-bg {
+				fill: var(--bg);
+			}
+			.issue-dot {
+				fill: var(--warn);
+				stroke: var(--bg);
+				stroke-width: 2;
+			}
+
+			.minimap {
+				position: absolute;
+				right: 14px;
+				bottom: 14px;
+				width: 220px;
+				background: color-mix(in srgb, var(--surface) 90%, transparent);
+				backdrop-filter: blur(10px);
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				overflow: hidden;
+				z-index: 3;
+			}
+			.minimap header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 6px 10px;
+				font-size: 11.5px;
+				color: var(--text-3);
+				border-bottom: 1px solid var(--line);
+			}
+			.minimap .ok {
+				color: var(--ok);
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+			}
+			.minimap .ok::before {
+				content: '';
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--ok);
+			}
+			.minimap svg {
+				display: block;
+				width: 100%;
+				height: 120px;
+			}
+
+			.ctx {
+				position: absolute;
+				left: 0;
+				top: 0;
+				display: flex;
+				gap: 2px;
+				padding: 3px;
+				background: var(--surface);
+				border: 1px solid var(--line);
+				border-radius: 10px;
+				box-shadow: var(--shadow);
+				z-index: 2;
+				transform: translateY(-50%);
+				flex-direction: column;
+			}
+
+			/* ---------- Inspektor ---------- */
+			.inspector {
+				grid-area: inspector;
+				background: var(--surface);
+				border-left: 1px solid var(--line);
+				display: flex;
+				flex-direction: column;
+				min-width: 0;
+			}
+			.tabs {
+				display: flex;
+				gap: 4px;
+				padding: 8px 10px 0;
+				border-bottom: 1px solid var(--line);
+			}
+			.tab {
+				border: 0;
+				background: transparent;
+				padding: 8px 10px 10px;
+				color: var(--text-3);
+				cursor: pointer;
+				font-weight: 500;
+				border-bottom: 2px solid transparent;
+				margin-bottom: -1px;
+				display: inline-flex;
+				gap: 6px;
+				align-items: center;
+			}
+			.tab[aria-selected='true'] {
+				color: var(--text);
+				border-bottom-color: var(--accent);
+			}
+			.badge {
+				font-size: 10.5px;
+				font-weight: 700;
+				min-width: 18px;
+				height: 18px;
+				padding: 0 5px;
+				border-radius: 999px;
+				display: inline-grid;
+				place-items: center;
+				background: #f5b84a26;
+				color: var(--warn);
+			}
+			.panel {
+				flex: 1;
+				overflow: auto;
+				padding: 14px;
+			}
+			.panel[hidden] {
+				display: none;
+			}
+			.sel-head {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				margin-bottom: 14px;
+			}
+			.sel-icon {
+				width: 36px;
+				height: 36px;
+				border-radius: 10px;
+				background: var(--accent-soft);
+				color: var(--accent);
+				display: grid;
+				place-items: center;
+			}
+			.sel-head b {
+				display: block;
+			}
+			.sel-head small {
+				color: var(--text-3);
+				font-family: var(--mono);
+			}
+			.field {
+				margin-bottom: 12px;
+			}
+			.field label {
+				display: block;
+				font-size: 12px;
+				color: var(--text-2);
+				margin-bottom: 5px;
+			}
+			.field input,
+			.field select {
+				width: 100%;
+				height: 34px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				color: var(--text);
+				padding: 0 10px;
+				font: inherit;
+			}
+			.field input:focus,
+			.field select:focus {
+				border-color: var(--accent);
+				outline: none;
+				box-shadow: 0 0 0 3px var(--accent-soft);
+			}
+			.field .hint {
+				font-size: 11.5px;
+				color: var(--text-3);
+				margin-top: 4px;
+			}
+			.row2 {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+			}
+			.swatches {
+				display: flex;
+				gap: 6px;
+			}
+			.swatch {
+				width: 26px;
+				height: 26px;
+				border-radius: 7px;
+				border: 2px solid transparent;
+				cursor: pointer;
+			}
+			.swatch[aria-pressed='true'] {
+				border-color: var(--text);
+			}
+			details.group {
+				border-top: 1px solid var(--line);
+				padding-top: 10px;
+				margin-top: 6px;
+			}
+			details.group summary {
+				cursor: pointer;
+				color: var(--text-2);
+				font-size: 12.5px;
+				font-weight: 600;
+				margin-bottom: 10px;
+			}
+
+			.code {
+				font: 12.5px/1.7 var(--mono);
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 10px;
+				padding: 10px 0;
+				counter-reset: ln;
+				margin: 0;
+				overflow: auto;
+			}
+			.code span.l {
+				display: block;
+				padding: 0 12px 0 0;
+				white-space: pre;
+			}
+			.code span.l::before {
+				counter-increment: ln;
+				content: counter(ln);
+				display: inline-block;
+				width: 34px;
+				padding-right: 12px;
+				text-align: right;
+				color: var(--text-3);
+			}
+			.code span.l.hl {
+				background: var(--accent-soft);
+				box-shadow: inset 2px 0 0 var(--accent);
+			}
+			.code .k {
+				color: var(--accent-2);
+			}
+			.code .id {
+				color: var(--accent);
+			}
+			.code .s {
+				color: var(--ok);
+			}
+			.code .c {
+				color: var(--text-3);
+			}
+			.code-meta {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 12px;
+				color: var(--text-3);
+				margin-bottom: 10px;
+			}
+			.sync {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				color: var(--ok);
+			}
+
+			.issue {
+				display: flex;
+				gap: 10px;
+				padding: 10px;
+				border: 1px solid var(--line);
+				border-radius: 10px;
+				background: var(--surface-2);
+				margin-bottom: 8px;
+				cursor: pointer;
+				width: 100%;
+				text-align: left;
+			}
+			.issue:hover {
+				border-color: var(--text-3);
+			}
+			.issue .sev {
+				width: 22px;
+				height: 22px;
+				border-radius: 6px;
+				display: grid;
+				place-items: center;
+				flex: none;
+				font-weight: 700;
+				font-size: 12px;
+			}
+			.issue.warn .sev {
+				background: #f5b84a26;
+				color: var(--warn);
+			}
+			.issue.info .sev {
+				background: var(--accent-soft);
+				color: var(--accent);
+			}
+			.issue b {
+				display: block;
+				font-weight: 600;
+				font-size: 13px;
+			}
+			.issue small {
+				color: var(--text-3);
+			}
+
+			/* ---------- Statuszeile ---------- */
+			.status {
+				grid-area: status;
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				padding: 0 10px;
+				border-top: 1px solid var(--line);
+				background: var(--surface);
+				font-size: 12px;
+				color: var(--text-3);
+			}
+			.pill {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				padding: 2px 8px;
+				border-radius: 6px;
+			}
+			.pill .dot {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--ok);
+			}
+			.status .grow {
+				flex: 1;
+			}
+
+			@media (max-width: 1100px) {
+				.app {
+					grid-template-columns: 56px 0 1fr 320px;
+				}
+				.palette {
+					display: none;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				* {
+					transition: none !important;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+			<defs>
+				<symbol id="i-pointer" viewBox="0 0 24 24"><path d="M4 3l7 17 2.5-7.5L21 10z" /></symbol>
+				<symbol id="i-shapes" viewBox="0 0 24 24"
+					><rect x="3" y="3" width="8" height="8" rx="1.5" /><circle cx="17" cy="17" r="4" /><path
+						d="M17 3l4 7h-8z"
+				/></symbol>
+				<symbol id="i-link" viewBox="0 0 24 24"><path d="M5 19L19 5M13 5h6v6" /></symbol>
+				<symbol id="i-text" viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6" /></symbol>
+				<symbol id="i-layers" viewBox="0 0 24 24"
+					><path d="M12 3l9 5-9 5-9-5z" /><path d="M3 13l9 5 9-5" /></symbol
+				>
+				<symbol id="i-help" viewBox="0 0 24 24"
+					><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 015 .5c0 2-2.5 2-2.5 4M12 17h.01" /></symbol
+				>
+				<symbol id="i-sun" viewBox="0 0 24 24"
+					><circle cx="12" cy="12" r="4" /><path
+						d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"
+				/></symbol>
+				<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 010 10h-3" /></symbol>
+				<symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5" /><path d="M20 9H9a5 5 0 000 10h3" /></symbol>
+				<symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14" /></symbol>
+				<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+				<symbol id="i-fit" viewBox="0 0 24 24"
+					><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></symbol
+				>
+				<symbol id="i-search" viewBox="0 0 24 24"
+					><circle cx="11" cy="11" r="6" /><path d="M20 20l-4.5-4.5" /></symbol
+				>
+				<symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5" /></symbol>
+				<symbol id="i-export" viewBox="0 0 24 24"
+					><path d="M12 15V3M7 8l5-5 5 5" /><path d="M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6" /></symbol
+				>
+				<symbol id="i-file" viewBox="0 0 24 24"
+					><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" /><path d="M14 3v5h5" /></symbol
+				>
+				<symbol id="i-open" viewBox="0 0 24 24"
+					><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></symbol
+				>
+				<symbol id="i-save" viewBox="0 0 24 24"
+					><path d="M5 3h11l5 5v11a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /><path
+						d="M7 3v5h8M7 21v-7h10v7"
+				/></symbol>
+				<symbol id="i-trash" viewBox="0 0 24 24"
+					><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></symbol
+				>
+				<symbol id="i-copy" viewBox="0 0 24 24"
+					><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3" /></symbol
+				>
+				<symbol id="i-group" viewBox="0 0 24 24"
+					><rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="3 3" /><rect
+						x="7"
+						y="8"
+						width="5"
+						height="4"
+					/><rect x="12" y="13" width="5" height="4"
+				/></symbol>
+				<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+					<path d="M0 0L10 5L0 10z" fill="context-stroke" />
+				</marker>
+			</defs>
+		</svg>
+
+		<div class="app" id="app">
+			<!-- Icon-Rail -->
+			<nav class="rail" aria-label="Werkzeuge">
+				<div class="logo" aria-hidden="true">m</div>
+				<button class="rail-btn" aria-pressed="true" title="Auswahl (V)">
+					<svg class="i"><use href="#i-pointer" /></svg><span class="visually-hidden">Auswahl</span>
+				</button>
+				<button class="rail-btn" aria-pressed="false" title="Formen (S)">
+					<svg class="i"><use href="#i-shapes" /></svg><span class="visually-hidden">Formen</span>
+				</button>
+				<button class="rail-btn" aria-pressed="false" title="Verbinden (C)">
+					<svg class="i"><use href="#i-link" /></svg><span class="visually-hidden">Verbinden</span>
+				</button>
+				<button class="rail-btn" aria-pressed="false" title="Beschriftung (T)">
+					<svg class="i"><use href="#i-text" /></svg><span class="visually-hidden">Beschriftung</span>
+				</button>
+				<button class="rail-btn" aria-pressed="false" title="Container (G)">
+					<svg class="i"><use href="#i-layers" /></svg><span class="visually-hidden">Container</span>
+				</button>
+				<div class="spacer"></div>
+				<button class="rail-btn" id="theme" title="Hell/Dunkel">
+					<svg class="i"><use href="#i-sun" /></svg><span class="visually-hidden">Farbschema wechseln</span>
+				</button>
+				<button class="rail-btn" title="Hilfe (F1)">
+					<svg class="i"><use href="#i-help" /></svg><span class="visually-hidden">Hilfe</span>
+				</button>
+			</nav>
+
+			<!-- Kopfzeile -->
+			<header class="top" role="toolbar" aria-label="Werkzeugleiste">
+				<div class="file">
+					<button class="icon-btn" title="Neu (Strg+N)"><svg class="i"><use href="#i-file" /></svg></button>
+					<button class="icon-btn" title="Öffnen (Strg+O)"><svg class="i"><use href="#i-open" /></svg></button>
+					<button class="icon-btn" title="Speichern (Strg+S)"><svg class="i"><use href="#i-save" /></svg></button>
+					<span class="file-name" data-testid="file">bestellprozess.mmd</span>
+					<span class="dirty">geändert</span>
+				</div>
+				<span class="chip" data-testid="type">flowchart TD</span>
+				<div class="grow"></div>
+				<button class="ghost" title="Suchen (Strg+F)">
+					<svg class="i"><use href="#i-search" /></svg> Suchen <kbd>Strg F</kbd>
+				</button>
+				<button class="ghost" id="toggle-code" aria-pressed="true" title="Code ein/aus (Strg+E)">
+					<svg class="i"><use href="#i-code" /></svg> Code
+				</button>
+				<button class="primary"><svg class="i"><use href="#i-export" /></svg> Export</button>
+			</header>
+
+			<!-- Palette -->
+			<aside class="palette" aria-label="Palette">
+				<label class="search">
+					<svg class="i"><use href="#i-search" /></svg>
+					<input placeholder="Form suchen …" aria-label="Form suchen" />
+				</label>
+				<div class="section-title">Formen</div>
+				<div class="tiles">
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><rect x="2" y="3" width="30" height="16" rx="1" /></svg>Rechteck
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><rect x="2" y="3" width="30" height="16" rx="5" /></svg>Abgerundet
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><rect x="2" y="3" width="30" height="16" rx="8" /></svg>Stadion
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><path d="M17 1l15 10-15 10L2 11z" /></svg>Raute
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><circle cx="17" cy="11" r="9" /></svg>Kreis
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"
+							><ellipse cx="17" cy="5" rx="11" ry="3" /><path d="M6 5v12c0 1.7 5 3 11 3s11-1.3 11-3V5" /></svg
+						>Zylinder
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><path d="M8 3h18l6 8-6 8H8l-6-8z" /></svg>Sechseck
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><path d="M7 3h25l-5 16H2z" /></svg>Parallelogr.
+					</button>
+					<button class="tile" draggable="true">
+						<svg viewBox="0 0 34 22"><rect x="2" y="3" width="30" height="16" /><path d="M6 3v16M28 3v16" /></svg
+						>Unterprog.
+					</button>
+				</div>
+				<div class="section-title">Struktur</div>
+				<button class="template" draggable="true">
+					<span class="thumb"><svg class="i"><use href="#i-group" /></svg></span>
+					<span><b>Container</b><small>Subgraph</small></span>
+				</button>
+				<div class="section-title">Vorlagen</div>
+				<button class="template" draggable="true">
+					<span class="thumb"
+						><svg viewBox="0 0 40 20" width="38" height="20" fill="none" stroke="currentColor" stroke-width="1.5"
+							><rect x="1" y="6" width="10" height="8" rx="2" /><rect x="15" y="6" width="10" height="8" rx="2" /><rect
+								x="29"
+								y="6"
+								width="10"
+								height="8"
+								rx="2"
+							/><path d="M11 10h4M25 10h4" /></svg
+					></span>
+					<span><b>Ablauf</b><small>3 Schritte, verbunden</small></span>
+				</button>
+				<button class="template" draggable="true">
+					<span class="thumb"
+						><svg viewBox="0 0 40 20" width="38" height="20" fill="none" stroke="currentColor" stroke-width="1.5"
+							><path d="M12 2l8 8-8 8-8-8z" /><rect x="27" y="1" width="11" height="7" rx="2" /><rect
+								x="27"
+								y="12"
+								width="11"
+								height="7"
+								rx="2"
+							/><path d="M20 10l7-6M20 10l7 6" /></svg
+					></span>
+					<span><b>Entscheidung</b><small>Raute mit Ja/Nein</small></span>
+				</button>
+			</aside>
+
+			<!-- Canvas -->
+			<main class="canvas" aria-label="Zeichenfläche">
+				<div class="cmdbar" role="toolbar" aria-label="Bearbeiten und Ansicht">
+					<button class="icon-btn" title="Rückgängig (Strg+Z)"><svg class="i"><use href="#i-undo" /></svg></button>
+					<button class="icon-btn" title="Wiederholen (Strg+Y)" disabled>
+						<svg class="i"><use href="#i-redo" /></svg>
+					</button>
+					<span class="sep"></span>
+					<div class="seg" role="group" aria-label="Layout">
+						<button aria-pressed="true" data-seg>Auto</button>
+						<button aria-pressed="false" data-seg>Manuell</button>
+					</div>
+					<span class="sep"></span>
+					<button class="icon-btn" title="Verkleinern (Strg+-)"><svg class="i"><use href="#i-minus" /></svg></button>
+					<span class="zoom-val">100 %</span>
+					<button class="icon-btn" title="Vergrößern (Strg++)"><svg class="i"><use href="#i-plus" /></svg></button>
+					<button class="icon-btn" title="Einpassen (Umschalt+1)"><svg class="i"><use href="#i-fit" /></svg></button>
+				</div>
+
+				<svg class="diagram" viewBox="0 0 900 640" preserveAspectRatio="xMidYMid meet" id="diagram">
+					<!-- Kanten -->
+					<path class="edge" d="M450 128 V172" marker-end="url(#arr)" />
+					<path class="edge" d="M450 222 V262" marker-end="url(#arr)" />
+					<path class="edge" d="M410 312 H280 V392" marker-end="url(#arr)" />
+					<path class="edge" d="M490 312 H620 V392" marker-end="url(#arr)" />
+					<path class="edge dotted" d="M280 442 V500 H408" marker-end="url(#arr)" />
+					<path class="edge" d="M620 442 V500 H492" marker-end="url(#arr)" />
+					<rect class="edge-label-bg" x="318" y="302" width="34" height="20" rx="4" />
+					<text class="edge-label" x="335" y="312">ja</text>
+					<rect class="edge-label-bg" x="540" y="302" width="40" height="20" rx="4" />
+					<text class="edge-label" x="560" y="312">nein</text>
+
+					<!-- Knoten -->
+					<g class="node" data-id="A" data-label="Bestellung eingegangen" data-shape="Stadion">
+						<rect class="shape" x="355" y="78" width="190" height="50" rx="25" />
+						<text x="450" y="103">Bestellung eingegangen</text>
+					</g>
+					<g class="node selected" data-id="B" data-label="Daten prüfen" data-shape="Abgerundet">
+						<rect class="shape" x="370" y="172" width="160" height="50" rx="10" />
+						<text x="450" y="197">Daten prüfen</text>
+						<rect class="handle" x="366" y="168" width="8" height="8" rx="2" />
+						<rect class="handle" x="526" y="168" width="8" height="8" rx="2" />
+						<rect class="handle" x="366" y="218" width="8" height="8" rx="2" />
+						<rect class="handle" x="526" y="218" width="8" height="8" rx="2" />
+					</g>
+					<g class="node" data-id="C" data-label="Gültig?" data-shape="Raute">
+						<path class="shape" d="M450 262 L490 312 L450 362 L410 312 Z" />
+						<text x="450" y="312">Gültig?</text>
+					</g>
+					<g class="node" data-id="D" data-label="Lager reservieren" data-shape="Zylinder">
+						<path
+							class="shape"
+							d="M200 400 a80 10 0 0 0 160 0 a80 10 0 0 0 -160 0 v34 a80 10 0 0 0 160 0 v-34"
+						/>
+						<text x="280" y="424">Lager reservieren</text>
+					</g>
+					<g class="node" data-id="E" data-label="Kunde informieren" data-shape="Rechteck">
+						<rect class="shape" x="540" y="392" width="160" height="50" rx="2" />
+						<text x="620" y="417">Kunde informieren</text>
+						<circle class="issue-dot" cx="700" cy="392" r="6" />
+					</g>
+					<g class="node" data-id="F" data-label="Ende" data-shape="Kreis">
+						<circle class="shape" cx="450" cy="500" r="40" />
+						<text x="450" y="500">Ende</text>
+					</g>
+				</svg>
+
+				<div class="ctx" id="ctx" role="toolbar" aria-label="Auswahl-Aktionen">
+					<button class="icon-btn" title="Verbinden"><svg class="i"><use href="#i-link" /></svg></button>
+					<button class="icon-btn" title="Duplizieren"><svg class="i"><use href="#i-copy" /></svg></button>
+					<button class="icon-btn" title="In Container gruppieren"><svg class="i"><use href="#i-group" /></svg></button>
+					<button class="icon-btn" title="Löschen (Entf)"><svg class="i"><use href="#i-trash" /></svg></button>
+				</div>
+
+				<section class="minimap" aria-label="Vorschau">
+					<header><span>Vorschau (Mermaid)</span><span class="ok">gerendert</span></header>
+					<svg viewBox="0 0 900 640" aria-hidden="true">
+						<g fill="none" stroke="var(--text-3)" stroke-width="6">
+							<rect x="355" y="78" width="190" height="50" rx="25" />
+							<rect x="370" y="172" width="160" height="50" rx="10" stroke="var(--accent)" />
+							<path d="M450 262 L490 312 L450 362 L410 312 Z" />
+							<rect x="200" y="392" width="160" height="50" />
+							<rect x="540" y="392" width="160" height="50" />
+							<circle cx="450" cy="500" r="40" />
+						</g>
+						<rect x="120" y="40" width="660" height="520" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="4" rx="12" />
+					</svg>
+				</section>
+			</main>
+
+			<!-- Inspektor -->
+			<aside class="inspector" aria-label="Seitenleiste">
+				<div class="tabs" role="tablist">
+					<button class="tab" role="tab" aria-selected="true" aria-controls="p-props" id="t-props">
+						Eigenschaften
+					</button>
+					<button class="tab" role="tab" aria-selected="false" aria-controls="p-code" id="t-code">Code</button>
+					<button class="tab" role="tab" aria-selected="false" aria-controls="p-err" id="t-err">
+						Fehler <span class="badge">2</span>
+					</button>
+				</div>
+
+				<section class="panel" role="tabpanel" id="p-props" aria-labelledby="t-props">
+					<div class="sel-head">
+						<span class="sel-icon"><svg class="i"><use href="#i-shapes" /></svg></span>
+						<div><b id="sel-label">Daten prüfen</b><small id="sel-id">Knoten · B</small></div>
+					</div>
+					<div class="field">
+						<label for="f-text">Beschriftung</label>
+						<input id="f-text" value="Daten prüfen" />
+					</div>
+					<div class="row2">
+						<div class="field">
+							<label for="f-id">ID</label>
+							<input id="f-id" value="B" />
+						</div>
+						<div class="field">
+							<label for="f-shape">Form</label>
+							<select id="f-shape">
+								<option>Rechteck</option>
+								<option selected>Abgerundet</option>
+								<option>Stadion</option>
+								<option>Raute (Entscheidung)</option>
+								<option>Kreis</option>
+								<option>Zylinder (Datenbank)</option>
+								<option>Sechseck</option>
+							</select>
+						</div>
+					</div>
+					<div class="field">
+						<label>Füllfarbe</label>
+						<div class="swatches" role="group" aria-label="Füllfarbe">
+							<button class="swatch" style="background: var(--node)" aria-pressed="true" title="Standard"></button>
+							<button class="swatch" style="background: #3b82f6" aria-pressed="false" title="Blau"></button>
+							<button class="swatch" style="background: #10b981" aria-pressed="false" title="Grün"></button>
+							<button class="swatch" style="background: #f59e0b" aria-pressed="false" title="Orange"></button>
+							<button class="swatch" style="background: #ef4444" aria-pressed="false" title="Rot"></button>
+							<button class="swatch" style="background: #a855f7" aria-pressed="false" title="Violett"></button>
+						</div>
+					</div>
+					<details class="group" open>
+						<summary>Erweitert</summary>
+						<div class="field">
+							<label for="f-cls">Klassen</label>
+							<input id="f-cls" placeholder="z. B. wichtig pruefung" />
+							<div class="hint">Mehrere Klassen mit Leerzeichen trennen</div>
+						</div>
+						<div class="field">
+							<label for="f-click">Klick-Ziel</label>
+							<input id="f-click" placeholder="https://…" />
+							<div class="hint">Wird nur gespeichert, nie ausgeführt</div>
+						</div>
+					</details>
+				</section>
+
+				<section class="panel" role="tabpanel" id="p-code" aria-labelledby="t-code" hidden>
+					<div class="code-meta">
+						<span class="sync">Grafik = Code</span><span>LF · UTF-8</span>
+					</div>
+					<pre class="code"><span class="l"><span class="c">%% @mermuid {"layout":"auto"}</span></span><span class="l"><span class="k">flowchart</span> TD</span><span class="l">  <span class="id">A</span>([<span class="s">Bestellung eingegangen</span>])</span><span class="l hl">  <span class="id">B</span>(<span class="s">Daten prüfen</span>)</span><span class="l">  <span class="id">C</span>{<span class="s">Gültig?</span>}</span><span class="l">  <span class="id">D</span>[(<span class="s">Lager reservieren</span>)]</span><span class="l">  <span class="id">E</span>[<span class="s">Kunde informieren</span>]</span><span class="l">  <span class="id">F</span>((<span class="s">Ende</span>))</span><span class="l">  <span class="id">A</span> --&gt; <span class="id">B</span></span><span class="l hl">  <span class="id">B</span> --&gt; <span class="id">C</span></span><span class="l">  <span class="id">C</span> --&gt;|<span class="s">ja</span>| <span class="id">D</span></span><span class="l">  <span class="id">C</span> --&gt;|<span class="s">nein</span>| <span class="id">E</span></span><span class="l">  <span class="id">D</span> -.-&gt; <span class="id">F</span></span><span class="l">  <span class="id">E</span> --&gt; <span class="id">F</span></span></pre>
+				</section>
+
+				<section class="panel" role="tabpanel" id="p-err" aria-labelledby="t-err" hidden>
+					<button class="issue warn">
+						<span class="sev">!</span>
+						<span><b>Knoten E hat keinen Klick-Ziel-Schutz</b><small>Zeile 7 · Sprung zum Element</small></span>
+					</button>
+					<button class="issue info">
+						<span class="sev">i</span>
+						<span><b>Kante D → F gepunktet</b><small>Zeile 13 · Stil weicht vom Rest ab</small></span>
+					</button>
+				</section>
+			</aside>
+
+			<!-- Statuszeile -->
+			<footer class="status" role="status">
+				<span class="pill"><span class="dot"></span>Parser: OK</span>
+				<span class="pill"><span class="dot"></span>Sync: Grafik=Code</span>
+				<span class="pill">Layout: automatisch (dagre)</span>
+				<span class="grow"></span>
+				<span class="pill">Auswahl: 1 Knoten</span>
+				<span class="pill">x 450 · y 197</span>
+			</footer>
+		</div>
+
+		<script>
+			// Nur Mockup-Interaktion: Tabs, Theme, Code-Panel, Auswahl, Segmente.
+			const $ = (s, r = document) => r.querySelector(s);
+			const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+			$$('.tab').forEach((tab) =>
+				tab.addEventListener('click', () => {
+					$$('.tab').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+					$$('.panel').forEach((p) => (p.hidden = p.id !== tab.getAttribute('aria-controls')));
+				})
+			);
+
+			$('#theme').addEventListener('click', () => {
+				const r = document.documentElement;
+				r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light';
+			});
+
+			$('#toggle-code').addEventListener('click', (e) => {
+				const btn = e.currentTarget;
+				const on = btn.getAttribute('aria-pressed') !== 'true';
+				btn.setAttribute('aria-pressed', String(on));
+				$('#app').classList.toggle('code-hidden', !on);
+				placeCtx();
+			});
+
+			$$('.rail-btn[aria-pressed]').forEach((b) =>
+				b.addEventListener('click', () =>
+					$$('.rail-btn[aria-pressed]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+				)
+			);
+			$$('[data-seg]').forEach((b) =>
+				b.addEventListener('click', () =>
+					$$('[data-seg]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+				)
+			);
+			$$('.swatch').forEach((b) =>
+				b.addEventListener('click', () =>
+					$$('.swatch').forEach((x) => x.setAttribute('aria-pressed', String(x === b)))
+				)
+			);
+
+			function placeCtx() {
+				const sel = $('.node.selected .shape');
+				const ctx = $('#ctx');
+				if (!sel) return (ctx.style.display = 'none');
+				const box = sel.getBoundingClientRect();
+				const host = $('.canvas').getBoundingClientRect();
+				ctx.style.display = 'flex';
+				ctx.style.left = box.right - host.left + 14 + 'px';
+				ctx.style.top = box.top - host.top + box.height / 2 + 'px';
+			}
+
+			$$('.node').forEach((n) =>
+				n.addEventListener('click', (e) => {
+					e.stopPropagation();
+					$$('.node').forEach((x) => x.classList.toggle('selected', x === n));
+					$('#sel-label').textContent = n.dataset.label;
+					$('#sel-id').textContent = 'Knoten · ' + n.dataset.id;
+					$('#f-text').value = n.dataset.label;
+					$('#f-id').value = n.dataset.id;
+					$('#f-shape').value = [...$('#f-shape').options].find((o) => o.text.startsWith(n.dataset.shape))?.text;
+					placeCtx();
+				})
+			);
+			$('#diagram').addEventListener('click', () => {
+				$$('.node').forEach((x) => x.classList.remove('selected'));
+				placeCtx();
+			});
+			addEventListener('resize', placeCtx);
+			placeCtx();
+		</script>
+	</body>
+</html>

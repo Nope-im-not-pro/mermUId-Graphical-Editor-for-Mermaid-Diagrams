@@ -1,0 +1,11 @@
+flowchart TD
+    A@{ shape: doc, label: "Bericht" } --> B@{shape: delay,label: "Warten"}
+    B --> C@{ label: 'Eingabe', shape: manual-input }
+    C -.-> D@{ shape: "das", label: Speicher } & E@{ shape: disk }
+    H[Klammer] e1@--> I@{ shape: lined-cylinder, label: "a\\b #quot;c#quot;" };
+    H@{ shape: rect, label: "unbekannt" }
+    e1@{ animate: true }
+    subgraph S [Gruppe]
+      J@{ shape: sloped-rectangle, label: "Zeile 1
+      Zeile 2" }
+    end

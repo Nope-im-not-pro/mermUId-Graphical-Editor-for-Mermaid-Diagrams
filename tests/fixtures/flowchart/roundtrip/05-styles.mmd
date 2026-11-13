@@ -1,0 +1,12 @@
+flowchart LR
+    classDef warn fill:#f96,stroke:#333,stroke-width:4px
+    classDef ok fill:#9f6
+    A[Alarm]:::warn --> B[Gut]
+    B --> C[Neutral]
+    C --> A
+    class B,C ok
+    style C fill:#bbf,stroke:#333,color:#fff
+    linkStyle 0 stroke:#f00,stroke-width:2px
+    linkStyle 2 stroke:#00f
+    click A "https://example.org" "Hilfe"
+    click B callback

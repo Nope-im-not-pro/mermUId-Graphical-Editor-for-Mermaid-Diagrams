@@ -1,0 +1,17 @@
+[
+	{ "id": "script", "input": "Start<script>alert(1)</script>" },
+	{ "id": "img-onerror", "input": "<img src=x onerror=\"alert(1)\">Bild" },
+	{ "id": "javascript-link", "input": "<a href=\"javascript:alert(1)\">Link</a>" },
+	{
+		"id": "data-url",
+		"input": "<a href=\"data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==\">Daten</a>"
+	},
+	{ "id": "svg-onload", "input": "<svg onload=\"alert(1)\"><circle r=\"5\"/></svg>Kreis" },
+	{ "id": "entity-bypass", "input": "&lt;img src=x onerror=&quot;alert(1)&quot;&gt;Text" },
+	{ "id": "iframe", "input": "<iframe src=\"javascript:alert(1)\"></iframe>Rahmen" },
+	{
+		"id": "init-loose",
+		"input": "%%{init: {\"securityLevel\": \"loose\"}}%%Knoten",
+		"init": { "securityLevel": "loose", "theme": "dark", "startOnLoad": true }
+	}
+]
